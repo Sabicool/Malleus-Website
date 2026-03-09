@@ -1,0 +1,11 @@
+.DS_Store
+.idea
+*.log
+tmp/
+.env
+
+*.py[cod]
+.claude/*
+claude.md
+__pycache__/*
+dist/

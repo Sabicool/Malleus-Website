@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malleus Clinical Medicine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --ink: #1A2B3C;
+      --ink-muted: #4A6080;
+      --ink-faint: #96AABF;
+      --accent: #2E6DA4;
+      --accent-light: #D4E5F5;
+      --accent-mid: #7AAFD4;
+      --accent-dark: #1B4E7A;
+      --accent-glow: rgba(46, 109, 164, 0.15);
+      --border: #C8DBE8;
+      --border-light: #DDE8F0;
+      --radius: 4px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(240, 244, 248, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .nav-logo img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .nav-logo-text {
+      font-family: "Lora", serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--ink-muted);
+      font-size: 0.875rem;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--accent); }
+
+    .nav-cta {
+      background: var(--accent) !important;
+      color: white !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: var(--radius);
+      font-weight: 500 !important;
+      transition: background 0.2s !important;
+    }
+
+    .nav-cta:hover { background: var(--accent-dark) !important; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 2rem 70px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background: subtle geometric grid */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-light) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+      background-size: 52px 52px;
+      opacity: 0.7;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 100%);
+    }
+
+    /* Blue gradient glow top-right */
+    .hero-bg::after {
+      content: "";
+      position: absolute;
+      top: -15%;
+      right: -8%;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(46, 109, 164, 0.18) 0%, transparent 68%);
+      border-radius: 50%;
+    }
+
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--accent-light);
+      color: var(--accent-dark);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border-radius: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-badge::before {
+      content: "";
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero-title {
+      font-family: "Lora", serif;
+      font-size: clamp(2.4rem, 4.5vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-description {
+      font-size: 1.05rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 440px;
+      margin-bottom: 2rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      color: var(--ink);
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      font-weight: 400;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .btn-secondary:hover { background: var(--surface); border-color: var(--accent-mid); }
+
+    .btn-donate {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--accent-mid);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-donate:hover { background: var(--accent-light); }
+
+    .btn-arrow { font-size: 1rem; transition: transform 0.2s; }
+    .btn-primary:hover .btn-arrow { transform: translateX(3px); }
+
+    /* Hero card */
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow:
+        0 4px 40px rgba(46, 109, 164, 0.1),
+        0 1px 4px rgba(26, 43, 60, 0.05);
+      position: relative;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 2rem; right: 2rem;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-mid));
+      border-radius: 0 0 3px 3px;
+    }
+
+    .hero-logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .hero-logo-img {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 2px 12px rgba(46,109,164,0.2);
+    }
+
+    .hero-logo-text-area {}
+
+    .hero-logo-name {
+      font-family: "Lora", serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .hero-logo-sub {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+    }
+
+    .card-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat {
+      padding: 0.9rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+    }
+
+    .stat-value {
+      font-family: "Lora", serif;
+      font-size: 1.65rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      margin-top: 0.15rem;
+    }
+
+    .card-tags {
+      border-top: 1px solid var(--border-light);
+      padding-top: 1.1rem;
+    }
+
+    .card-int-label {
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .tag-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .pill {
+      font-size: 0.73rem;
+      padding: 0.22rem 0.6rem;
+      border-radius: 2rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink-muted);
+    }
+
+    .pill-blue {
+      background: var(--accent-light);
+      border-color: transparent;
+      color: var(--accent-dark);
+      font-weight: 500;
+    }
+
+    /* ─── SECTION COMMON ─── */
+    section {
+      padding: 6rem 2rem;
+    }
+
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-eyebrow {
+      font-size: 0.73rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.7rem;
+    }
+
+    .section-title {
+      font-family: "Lora", serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.22;
+      margin-bottom: 0.9rem;
+    }
+
+    .section-subtitle {
+      font-size: 1rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 540px;
+    }
+
+    .section-header {
+      margin-bottom: 3.5rem;
+    }
+
+    /* ─── FEATURES ─── */
+    #features {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .feature-card {
+      padding: 2rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .feature-card:hover { background: var(--bg); }
+    .feature-card:nth-child(3n) { border-right: none; }
+    .feature-card:nth-child(4), .feature-card:nth-child(5), .feature-card:nth-child(6) { border-bottom: none; }
+
+    .feature-card.featured {
+      background: linear-gradient(135deg, var(--accent-light) 0%, rgba(255,255,255,0) 60%);
+    }
+
+    .feature-card.featured::after {
+      content: "FEATURED";
+      position: absolute;
+      top: 1rem; right: 1rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      color: var(--accent);
+      background: white;
+      border: 1px solid var(--accent-mid);
+      padding: 0.1rem 0.4rem;
+      border-radius: 2rem;
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      background: var(--accent-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .feature-title {
+      font-family: "Lora", serif;
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.45rem;
+    }
+
+    .feature-desc {
+      font-size: 0.87rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.65;
+    }
+
+    .feature-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-top: 0.75rem;
+      font-weight: 500;
+    }
+
+    .feature-link:hover { text-decoration: underline; }
+
+    /* ─── ADDON SPOTLIGHT ─── */
+    #addon {
+      background: var(--bg);
+    }
+
+    .addon-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .addon-visual {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(46,109,164,0.12);
+      position: relative;
+    }
+
+    .addon-visual::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-mid));
+    }
+
+    .showcase-video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .showcase-video-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+      border-radius: 12px;
+    }
+
+    .addon-video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+    }
+
+    .addon-video-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
+
+    .addon-info {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .addon-info-label {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+    }
+
+    .addon-info-label strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .addon-badge {
+      font-size: 0.73rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-light);
+      padding: 0.2rem 0.6rem;
+      border-radius: 2rem;
+    }
+
+    .addon-screenshot {
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .addon-info-footer {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .addon-content {}
+
+    .addon-features {
+      list-style: none;
+      margin: 1.5rem 0 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .addon-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+    }
+
+    .addon-feature-icon {
+      width: 20px;
+      height: 20px;
+      background: var(--accent-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .addon-feature-icon svg {
+      width: 11px; height: 11px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .addon-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* ─── HOW TO ─── */
+    #how-to {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .howto-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 1rem;
+      padding: 1.4rem 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .step:first-child { padding-top: 0; }
+    .step:last-child { border-bottom: none; }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      transition: all 0.2s;
+    }
+
+    .step:hover .step-num {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .step-title {
+      font-family: "Lora", serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+
+    .step-desc {
+      font-size: 0.87rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    .step-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-top: 0.4rem;
+      font-weight: 500;
+    }
+
+    .step-link:hover { text-decoration: underline; }
+
+    /* Aside cards */
+    .howto-aside {
+      position: sticky;
+      top: 82px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .aside-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem;
+    }
+
+    .aside-card-title {
+      font-family: "Lora", serif;
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .aside-card-title svg {
+      width: 15px;
+      height: 15px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .aside-card p {
+      font-size: 0.84rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .aside-card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--accent-dark);
+      text-decoration: none;
+      border: 1px solid var(--accent-mid);
+      background: var(--accent-light);
+      padding: 0.38rem 0.85rem;
+      border-radius: var(--radius);
+      transition: background 0.2s;
+    }
+
+    .aside-card-link:hover { background: #BDD6EC; }
+
+    /* ─── RESOURCES ─── */
+    #resources {
+      background: var(--bg);
+    }
+
+    .resources-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .resource-card {
+      display: flex;
+      flex-direction: column;
+      padding: 1.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+
+    .resource-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(46,109,164,0.12);
+    }
+
+    .resource-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .resource-icon svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .ri-blue { background: var(--accent-light); }
+    .ri-blue svg { stroke: var(--accent); }
+    .ri-slate { background: #E3EBF2; }
+    .ri-slate svg { stroke: #4A6080; }
+    .ri-green { background: #E6F4EA; }
+    .ri-green svg { stroke: #2D7A47; }
+    .ri-purple { background: #EDE9F6; }
+    .ri-purple svg { stroke: #6840C4; }
+    .ri-red { background: #FEECEC; }
+    .ri-red svg { stroke: #C0392B; }
+
+    .resource-title {
+      font-family: "Lora", serif;
+      font-size: 0.93rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .resource-desc {
+      font-size: 0.79rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .resource-arrow {
+      margin-top: 0.9rem;
+      font-size: 0.77rem;
+      color: var(--accent);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .resource-card:hover .resource-arrow { opacity: 1; }
+
+    /* ─── DONATE BANNER ─── */
+    .donate-banner {
+      background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+      border-radius: 14px;
+      padding: 2.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 3rem;
+    }
+
+    .donate-text h3 {
+      font-family: "Lora", serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.4rem;
+    }
+
+    .donate-text p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.75);
+      font-weight: 300;
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    .btn-donate-white {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: white;
+      color: var(--accent-dark);
+      text-decoration: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-donate-white:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      padding: 2.5rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .footer-logo img {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .footer-name {
+      font-family: "Lora", serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .footer-sep {
+      width: 1px;
+      height: 16px;
+      background: var(--border);
+      margin: 0 0.5rem;
+    }
+
+    .footer-tagline {
+      font-size: 0.79rem;
+      color: var(--ink-faint);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--accent); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-badge      { animation: fadeInUp 0.5s ease both 0.1s; }
+    .hero-title      { animation: fadeInUp 0.5s ease both 0.2s; }
+    .hero-description { animation: fadeInUp 0.5s ease both 0.3s; }
+    .hero-actions    { animation: fadeInUp 0.5s ease both 0.4s; }
+    .hero-card       { animation: fadeInUp 0.6s ease both 0.3s; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1000px) {
+      .hero-inner, .addon-layout, .howto-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+      .addon-layout { direction: ltr; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .feature-card:nth-child(3n) { border-right: 1px solid var(--border); }
+      .feature-card:nth-child(2n) { border-right: none; }
+      .feature-card:nth-child(5), .feature-card:nth-child(6) { border-bottom: none; }
+      .feature-card:nth-child(3) { border-bottom: 1px solid var(--border); }
+      .howto-aside { position: static; }
+      .resources-grid { grid-template-columns: 1fr 1fr; }
+      .donate-banner { flex-direction: column; text-align: center; align-items: center; }
+    }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .feature-card { border-right: none !important; }
+      .resources-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .donate-banner { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <img src="logo.png" alt="Malleus logo" />
+    <span class="nav-logo-text">Malleus</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#addon">Anki Addon</a></li>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="submission-guidelines.html">Submit Cards</a></li>
+    <li><a href="register.html">Register</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">AU &amp; NZ Medical Students &amp; JMOs</div>
+      <h1 class="hero-title">Clinical medicine,<br><em>forged together.</em></h1>
+      <p class="hero-description">
+        The first student-run, collaborative and open-source clinical medicine Anki project
+        designed for Australian and New Zealand medical students and junior medical officers.
+      </p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="getting-started.html">
+          Get Started <span class="btn-arrow">→</span>
+        </a>
+        <a class="btn-secondary" href="register.html">
+          Join as a Member
+        </a>
+        <a class="btn-donate" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">
+          ♥ Donate
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-logo-area">
+        <img class="hero-logo-img" src="logo.png" alt="Malleus Clinical Medicine" />
+        <div class="hero-logo-text-area">
+          <div class="hero-logo-name">Malleus Clinical Medicine</div>
+          <div class="hero-logo-sub">Open-source · AU/NZ aligned · Free</div>
+        </div>
+      </div>
+      <div class="card-label">Deck at a glance</div>
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-value">3,800+</div>
+          <div class="stat-label">Flashcards</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Open</div>
+          <div class="stat-label">Source &amp; Free</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">AU/NZ</div>
+          <div class="stat-label">Curriculum Aligned</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Live</div>
+          <div class="stat-label">Updates via AnkiHub</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <div class="card-int-label">References</div>
+        <div class="tag-pills">
+          <span class="pill pill-blue">AnkiHub</span>
+          <span class="pill">eTG Complete</span>
+          <span class="pill">AMH Online</span>
+          <span class="pill">eMedici</span>
+          <span class="pill">RCH</span>
+          <span class="pill">LITFL</span>
+          <span class="pill">Radiopaedia</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-eyebrow">Why Malleus</div>
+      <h2 class="section-title">Built by students,<br>for students</h2>
+      <p class="section-subtitle">
+        Every aspect of Malleus is shaped by the people who use it — a living deck that grows
+        with every contribution and stays aligned with Australian clinical practice.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card featured">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <div class="feature-title">Anki Addon</div>
+        <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging — all without leaving Anki.</p>
+        <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) ↗</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="feature-title">Collaborative &amp; Maintained</div>
+        <p class="feature-desc">Cards are created, reviewed and updated by a community of medical students and junior doctors. No stale content — the deck evolves with feedback.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-title">AU/NZ Curriculum Aligned</div>
+        <p class="feature-desc">Content references Australian guidelines — eTG Complete, AMH, and local clinical standards — rather than US-centric resources.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div class="feature-title">Completely Free &amp; Open Source</div>
+        <p class="feature-desc">Malleus is free to use and contribute to. Hosted on AnkiHub, anyone can suggest card edits and improvements. AnkiHub offers full scholarships so the plugin costs nothing.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="9" y="11" width="13" height="10" rx="2" ry="2"/><path d="M5 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+        <div class="feature-title">Sort by Rotation &amp; Subject</div>
+        <p class="feature-desc">A detailed tagging structure lets you filter cards by rotation, subject, or topic — so you can study exactly what is relevant to where you are in your training.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="feature-title">Active Community</div>
+        <p class="feature-desc">A Discord server, Facebook group, and AnkiHub community of like-minded students share tips, resources, deck updates, and even run a Malleus Cup competition.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NOTE TYPE SHOWCASE -->
+<section id="showcase">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-eyebrow">The Malleus Note Type</div>
+      <h2 class="section-title">Built for clinical medicine</h2>
+      <p class="section-subtitle">
+        See how the Malleus note type structures clinical information for effective spaced repetition learning.
+      </p>
+    </div>
+    <div class="showcase-video-wrapper">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/xpgUj3s4hKw?si=Inrio06Rlevq-gRu" title="Malleus Note Type Showcase" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ANKI ADDON SPOTLIGHT -->
+<section id="addon">
+  <div class="section-inner">
+    <div class="addon-layout">
+      <div class="addon-content">
+        <div class="section-eyebrow">Malleus Anki Addon</div>
+        <h2 class="section-title">Your deck,<br>supercharged</h2>
+        <p class="section-subtitle">
+          The Malleus Anki Addon connects directly to the Malleus Notion database so you can manage
+          cards without ever leaving Anki. Search, find, and create — all in one place.
+        </p>
+
+        <ul class="addon-features">
+          <li class="addon-feature">
+            <div class="addon-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span>Search the Malleus Notion database from within Anki's browser or editor</span>
+          </li>
+          <li class="addon-feature">
+            <div class="addon-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span>Find existing cards with matching subject and disease tags instantly</span>
+          </li>
+          <li class="addon-feature">
+            <div class="addon-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span>Create new cards with correct Malleus tagging — select the right subtag or use Main Tag</span>
+          </li>
+          <li class="addon-feature">
+            <div class="addon-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span>Access via the "Malleus" button in the browser toolbar or the add card dialogue</span>
+          </li>
+        </ul>
+
+        <div class="addon-actions">
+          <a class="btn-primary" href="https://ankiweb.net/shared/info/620451841" target="_blank">
+            Install Addon <span class="btn-arrow">→</span>
+          </a>
+          <a class="btn-secondary" href="https://github.com/Sabicool/Malleus-Anki-Addon" target="_blank">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+
+      <div class="addon-visual">
+        <img class="addon-screenshot" src="addon.png" alt="Malleus Anki Addon screenshot" />
+        <div class="addon-info-footer">
+          <div class="addon-info-label">
+            Addon code: <strong>620451841</strong> &nbsp;·&nbsp; Anki 2.1+
+          </div>
+          <span class="addon-badge">Open Source · AGPL-3.0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO GET STARTED -->
+<section id="how-to">
+  <div class="section-inner">
+    <div class="howto-layout">
+      <div>
+        <div class="section-eyebrow">Getting Started</div>
+        <h2 class="section-title">Up and running<br>in minutes</h2>
+        <p class="section-subtitle" style="margin-bottom: 2.5rem;">
+          Follow these steps to install the deck and start reviewing clinical medicine flashcards today.
+        </p>
+
+        <ol class="steps-list">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Install Anki</div>
+              <p class="step-desc">Download and install Anki (free) for Windows, macOS, or Linux. Anki is the spaced-repetition engine that powers the deck.</p>
+              <a class="step-link" href="https://apps.ankiweb.net/" target="_blank">Download Anki ↗</a>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Create a Free AnkiHub Account</div>
+              <p class="step-desc">Malleus is distributed through AnkiHub which handles deck syncing and community suggestions. Create a free account — AnkiHub offers full scholarships so the plugin costs nothing.</p>
+              <a class="step-link" href="https://app.ankihub.net/" target="_blank">Go to AnkiHub ↗</a>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Install the AnkiHub Addon</div>
+              <p class="step-desc">Install the AnkiHub addon (code: 1322529746) to connect Anki to AnkiHub. This keeps your deck automatically up to date with community improvements.</p>
+              <a class="step-link" href="https://ankiweb.net/shared/info/1322529746" target="_blank">Get AnkiHub Addon ↗</a>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Subscribe to Malleus on AnkiHub</div>
+              <p class="step-desc">Search for "Malleus Clinical Medicine" on AnkiHub and subscribe. The deck will download automatically into your Anki library.</p>
+              <a class="step-link" href="https://app.ankihub.net/decks/" target="_blank">Find the Deck ↗</a>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">5</div>
+            <div class="step-content">
+              <div class="step-title">Install the Malleus Anki Addon</div>
+              <p class="step-desc">Optionally install the Malleus Anki Addon (code: 620451841) to search and create cards directly from within Anki using the Malleus Notion database.</p>
+              <a class="step-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Get Malleus Addon ↗</a>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">6</div>
+            <div class="step-content">
+              <div class="step-title">Read the Full Guide</div>
+              <p class="step-desc">The Notion guide covers the tagging structure, how to make card suggestions, and how to customise the deck to your year and rotation.</p>
+              <a class="step-link" href="getting-started.html">Open Getting Started Guide ↗</a>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="howto-aside">
+        <div class="aside-card">
+          <div class="aside-card-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Submission Guidelines
+          </div>
+          <p>Want to contribute? Read the submission guidelines before suggesting cards — covers format, tagging structure, and quality standards.</p>
+          <a class="aside-card-link" href="submission-guidelines.html">View Guidelines →</a>
+        </div>
+
+        <div class="aside-card">
+          <div class="aside-card-title">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Join the Community
+          </div>
+          <p>Get help, share resources and stay up to date with deck updates by joining the Malleus Discord and Facebook group.</p>
+          <a class="aside-card-link" href="https://discord.gg/4WqgJzjVyH" target="_blank">Join Discord →</a>
+        </div>
+
+        <div class="aside-card">
+          <div class="aside-card-title">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Support the Project
+          </div>
+          <p>Malleus is made by students, for students. Donations help cover hosting and project costs so we can keep improving the deck.</p>
+          <a class="aside-card-link" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">♥ Donate →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESOURCES -->
+<section id="resources">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-eyebrow">All Resources</div>
+      <h2 class="section-title">Everything you need</h2>
+      <p class="section-subtitle">All the key links for the Malleus project in one place.</p>
+    </div>
+
+    <div class="resources-grid">
+      <a class="resource-card" href="https://malleuscm.notion.site/" target="_blank">
+        <div class="resource-icon ri-blue">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="resource-title">Notion Hub</div>
+        <p class="resource-desc">Central home for all Malleus documentation, guides, card structure and project updates.</p>
+        <div class="resource-arrow">Visit ↗</div>
+      </a>
+
+      <a class="resource-card" href="getting-started.html">
+        <div class="resource-icon ri-green">
+          <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="resource-title">Getting Started Guide</div>
+        <p class="resource-desc">Step-by-step guide to installing the deck, setting up AnkiHub, and getting the most out of Malleus.</p>
+        <div class="resource-arrow">Read ↗</div>
+      </a>
+
+      <a class="resource-card" href="https://ankiweb.net/shared/info/620451841" target="_blank">
+        <div class="resource-icon ri-blue">
+          <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <div class="resource-title">Malleus Anki Addon</div>
+        <p class="resource-desc">Search and create Malleus cards directly from within Anki. Addon code: 620451841.</p>
+        <div class="resource-arrow">Install ↗</div>
+      </a>
+
+      <a class="resource-card" href="submission-guidelines.html">
+        <div class="resource-icon ri-blue">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="resource-title">Submission Guidelines</div>
+        <p class="resource-desc">Everything you need to know about contributing cards, formatting, tagging, and quality standards.</p>
+        <div class="resource-arrow">Read ↗</div>
+      </a>
+
+      <a class="resource-card" href="https://malleuscm.notion.site/about-project-malleus" target="_blank">
+        <div class="resource-icon ri-slate">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="resource-title">About the Project</div>
+        <p class="resource-desc">Learn about the origin, mission and team behind Malleus Clinical Medicine.</p>
+        <div class="resource-arrow">Read ↗</div>
+      </a>
+
+      <a class="resource-card" href="https://github.com/Sabicool/Malleus-Anki-Addon" target="_blank">
+        <div class="resource-icon ri-slate">
+          <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </div>
+        <div class="resource-title">GitHub (Addon)</div>
+        <p class="resource-desc">Source code for the Malleus Anki Addon. Open source under AGPL-3.0.</p>
+        <div class="resource-arrow">View ↗</div>
+      </a>
+
+      <a class="resource-card" href="https://discord.gg/4WqgJzjVyH" target="_blank">
+        <div class="resource-icon ri-purple">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="resource-title">Discord Community</div>
+        <p class="resource-desc">Join the server for help, card discussions, resources, and deck update announcements.</p>
+        <div class="resource-arrow">Join ↗</div>
+      </a>
+
+      <a class="resource-card" href="https://www.facebook.com/MalleusCM" target="_blank">
+        <div class="resource-icon ri-slate">
+          <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </div>
+        <div class="resource-title">Facebook Page</div>
+        <p class="resource-desc">Follow for announcements and community posts about the Malleus project.</p>
+        <div class="resource-arrow">Follow ↗</div>
+      </a>
+    </div>
+
+    <!-- Donate Banner -->
+    <div class="donate-banner">
+      <div class="donate-text">
+        <h3>Support Malleus ♥</h3>
+        <p>Malleus is a not-for-profit project made by students, for students. Your donations help cover hosting and tooling costs so we can keep the deck growing.</p>
+      </div>
+      <a class="btn-donate-white" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">
+        ♥ Donate via PayPal
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+      <a class="footer-logo" href="#">
+        <img src="logo.png" alt="Malleus" />
+        <span class="footer-name">Malleus</span>
+      </a>
+      <div class="footer-sep"></div>
+      <span class="footer-tagline">Clinical Medicine · AU/NZ · Open Source · Not for Profit</span>
+    </div>
+    <div class="footer-links">
+      <a href="getting-started.html">Getting Started</a>
+      <a href="submission-guidelines.html">Submit Cards</a>
+      <a href="register.html">Register</a>
+      <a href="https://discord.gg/4WqgJzjVyH" target="_blank">Discord</a>
+      <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate</a>
+      <a href="/cdn-cgi/l/email-protection#d5a5a7b0a6bcb1b0bba195b8b4b9b9b0a0a6fbbaa7b2fbb4a0">Contact</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
