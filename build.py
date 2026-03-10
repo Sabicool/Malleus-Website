@@ -738,11 +738,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 def nav_html(logo_name: str, active: str = "") -> str:
     pages = [
-        ("index.html",                "Home"),
-        ("getting-started.html",      "Getting Started"),
-        ("submission-guidelines.html","Submission Guidelines"),
-        ("checklist.html",            "Checklist"),
-        ("register.html",             "Register"),
+        ("index.html",   "Home"),
+        ("register.html","Register"),
     ]
     items = []
     for href, label in pages:
@@ -989,30 +986,6 @@ def main():
         print(f"  ✅  Found {len(form_ids)} fields: {list(form_ids.keys())}")
     else:
         print("  ⚠️  Using placeholder IDs — the form will need real IDs to submit.")
-
-    print("📄  Generating Getting Started page…")
-    html = build_notion_page(
-        "Getting Started", "How to use Malleus",
-        "Install the deck, set up AnkiHub, and start reviewing clinical medicine flashcards today.",
-        NOTION_PAGES["getting-started"], "getting-started", logo_name
-    )
-    (DIST_DIR / "getting-started.html").write_text(html, encoding="utf-8")
-
-    print("📄  Generating Submission Guidelines page…")
-    html = build_notion_page(
-        "Submission Guidelines", "Contributing to Malleus",
-        "Everything you need to know about formatting, tagging, and quality standards for new cards.",
-        NOTION_PAGES["submission-guidelines"], "submission-guidelines", logo_name
-    )
-    (DIST_DIR / "submission-guidelines.html").write_text(html, encoding="utf-8")
-
-    print("📄  Generating Card Submission Checklist page…")
-    html = build_notion_page(
-        "Card Submission Checklist", "Before you submit",
-        "Run through this checklist before submitting a card to make sure it meets Malleus standards.",
-        NOTION_PAGES["checklist"], "checklist", logo_name
-    )
-    (DIST_DIR / "checklist.html").write_text(html, encoding="utf-8")
 
     print("📄  Generating Register page…")
     html = build_register_page(form_ids, logo_name)
