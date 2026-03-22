@@ -1025,9 +1025,12 @@ def main():
     )
     (DIST_DIR / "checklist.html").write_text(html, encoding="utf-8")
 
-    print("📄  Generating Register page…")
-    html = build_register_page(form_ids, logo_name)
-    (DIST_DIR / "register.html").write_text(html, encoding="utf-8")
+    print("📄  Copying register.html…")
+    if Path("register.html").exists():
+        shutil.copy("register.html", DIST_DIR / "register.html")
+        print("  ✅  register.html copied to dist/")
+    else:
+        print("  ⚠️  register.html not found next to build.py — skipping.")
 
     print("📄  Copying index.html…")
     if Path("index.html").exists():
