@@ -1322,12 +1322,18 @@
     }
 
     @media (max-width: 800px) {
-      .tour-layout { grid-template-columns: 1fr; gap: 2rem; }
-      .tour-phone-sticky { position: static; }
-      .phone-wrap  { max-width: 200px; margin: 0 auto; }
-      .tour-step   { min-height: auto; padding: 0.5rem 0; }
-      .tour-step-inner { opacity: 1; transform: none; }
-      .tour-step-inner::after { transform: scaleY(1); }
+      /* Keep 2-col layout but shrink the phone so steps have room */
+      .tour-layout { grid-template-columns: 110px 1fr; gap: 1rem; }
+      .phone-wrap  { max-width: 110px; margin: 0; }
+      .tour-phone-sticky { position: sticky; top: 68px; }
+      .tour-step   { min-height: 55vh; padding: 0.75rem 0; }
+      /* Restore fade/accent animation on mobile */
+      .tour-step-inner { opacity: 0.35; transform: translateY(8px); padding: 1rem 0.85rem; }
+      .tour-step-inner::after { transform: scaleY(0); }
+      /* Tighten text for narrow step column */
+      .tour-step-num   { font-size: 0.65rem; }
+      .tour-step-title { font-size: 1rem; }
+      .tour-step-desc  { font-size: 0.82rem; line-height: 1.6; }
       .resources-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -1947,7 +1953,7 @@
   }
 
   function onScroll() {
-    if (ticking || window.innerWidth <= 800) return;
+    if (ticking) return;
     ticking = true;
     requestAnimationFrame(function() {
       findActiveStep();
@@ -1963,19 +1969,6 @@
 
   // Run once on load
   findActiveStep();
-
-  // Mobile: clear state
-  var mq = window.matchMedia('(max-width: 800px)');
-  function handleMQ(e) {
-    if (e.matches) {
-      stepEls.forEach(function(el) { el.classList.remove('active'); });
-      screenshot.style.transform = '';
-      screenshot.style.transition = '';
-      lastActiveIndex = -1;
-    }
-  }
-  if (mq.addEventListener) mq.addEventListener('change', handleMQ);
-  handleMQ(mq);
 })();
 </script>
 </body>
