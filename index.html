@@ -1357,8 +1357,9 @@
         padding-top: 360px;
         z-index: 1;
       }
-      /* Each step zone is tall enough to comfortably read + scroll through */
-      .tour-step   { min-height: 100vh; padding: 0.75rem 0; align-items: flex-start; }
+      /* Each step zone is tall enough to comfortably read + scroll through.
+         display:block (not flex) is required — sticky on a flex child is unreliable. */
+      .tour-step   { display: block; min-height: 100vh; padding: 0.75rem 0; }
       /* Card pins just below the phone while you scroll through its zone */
       .tour-step-inner {
         position: sticky;
