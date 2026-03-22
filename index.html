@@ -1331,7 +1331,7 @@
 
       .tour-phone-rail {
         align-self: stretch;
-        pointer-events: none;   /* let touches pass through to steps */
+        pointer-events: none;
         z-index: 2;
       }
       .tour-phone-sticky {
@@ -1339,22 +1339,24 @@
         top: 64px;
         display: flex;
         justify-content: center;
-        /* Solid at top, gentle fade at bottom so steps dissolve smoothly */
-        background: linear-gradient(to bottom, var(--bg) 75%, transparent 100%);
-        padding: 0.75rem 0 2.5rem;
+        background: var(--bg);   /* solid — mask-image on steps handles the fade */
+        padding: 0.75rem 0 0;
         pointer-events: none;
       }
       .phone-wrap {
-        max-width: 200px;
+        max-width: 260px;
         margin: 0 auto;
         pointer-events: auto;
       }
 
-      /* Steps start below the phone (phone ~400px tall + padding) */
+      /* Steps overlap the phone bottom by ~50px then fade in via mask.
+         260px phone ≈ 519px tall + 12px top padding = ~531px phone-sticky. */
       .tour-steps {
         align-self: start;
-        padding-top: 420px;
+        padding-top: 480px;
         z-index: 1;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 450px, black 560px);
+        mask-image:         linear-gradient(to bottom, transparent 0, transparent 450px, black 560px);
       }
       .tour-step   { min-height: 60vh; padding: 0.75rem 0; }
       .tour-step-inner { opacity: 0.35; transform: translateY(8px); padding: 1.25rem 1rem; }
