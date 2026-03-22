@@ -1339,20 +1339,21 @@
         top: 64px;
         display: flex;
         justify-content: center;
-        background: var(--bg);  /* mask steps scrolling beneath */
-        padding: 0.75rem 0 1rem;
+        /* Solid at top, gentle fade at bottom so steps dissolve smoothly */
+        background: linear-gradient(to bottom, var(--bg) 75%, transparent 100%);
+        padding: 0.75rem 0 2.5rem;
         pointer-events: none;
       }
       .phone-wrap {
-        max-width: 160px;
+        max-width: 200px;
         margin: 0 auto;
         pointer-events: auto;
       }
 
-      /* Steps start below the phone (phone ~320px tall + padding) */
+      /* Steps start below the phone (phone ~400px tall + padding) */
       .tour-steps {
         align-self: start;
-        padding-top: 340px;
+        padding-top: 420px;
         z-index: 1;
       }
       .tour-step   { min-height: 60vh; padding: 0.75rem 0; }
