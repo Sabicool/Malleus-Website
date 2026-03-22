@@ -6,7 +6,7 @@
   <title>Malleus Clinical Medicine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,13 +23,22 @@
       --accent-glow: rgba(46, 109, 164, 0.15);
       --border: #C8DBE8;
       --border-light: #DDE8F0;
-      --radius: 4px;
+      --radius-sm: 6px;
+      --radius: 10px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 3px rgba(27, 78, 122, 0.06);
+      --shadow-md: 0 4px 20px rgba(27, 78, 122, 0.08);
+      --shadow-lg: 0 12px 40px rgba(27, 78, 122, 0.1);
+      --shadow-xl: 0 20px 60px -15px rgba(27, 78, 122, 0.12);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: "DM Sans", sans-serif;
+      font-family: "Outfit", sans-serif;
       background: var(--bg);
       color: var(--ink);
       line-height: 1.6;
@@ -37,17 +46,48 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* ─── GRAIN OVERLAY ─── */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* ─── SCROLL REVEAL ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+    .reveal-delay-4 { transition-delay: 0.32s; }
+    .reveal-delay-5 { transition-delay: 0.4s; }
+    .reveal-delay-6 { transition-delay: 0.48s; }
+    .reveal-delay-7 { transition-delay: 0.56s; }
+
     /* ─── NAV ─── */
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 100;
-      background: rgba(240, 244, 248, 0.88);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
-      height: 62px;
+      background: rgba(240, 244, 248, 0.82);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid rgba(200, 219, 232, 0.6);
+      padding: 0 2.5rem;
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -56,14 +96,14 @@
     .nav-logo {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.65rem;
       text-decoration: none;
       color: var(--ink);
     }
 
     .nav-logo img {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       object-fit: cover;
     }
@@ -72,13 +112,13 @@
       font-family: "Lora", serif;
       font-weight: 600;
       font-size: 1.1rem;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 2rem;
+      gap: 0.35rem;
       list-style: none;
     }
 
@@ -87,34 +127,43 @@
       color: var(--ink-muted);
       font-size: 0.875rem;
       font-weight: 400;
-      letter-spacing: 0.01em;
-      transition: color 0.2s;
+      letter-spacing: 0.005em;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-sm);
+      transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
     }
 
-    .nav-links a:hover { color: var(--accent); }
+    .nav-links a:hover {
+      color: var(--accent);
+      background: rgba(46, 109, 164, 0.06);
+    }
 
     .nav-cta {
       background: var(--accent) !important;
       color: white !important;
-      padding: 0.45rem 1.1rem;
-      border-radius: var(--radius);
+      padding: 0.45rem 1.1rem !important;
+      border-radius: var(--radius-sm) !important;
       font-weight: 500 !important;
-      transition: background 0.2s !important;
+      transition: background 0.25s var(--ease-out), transform 0.15s var(--ease-out) !important;
     }
 
-    .nav-cta:hover { background: var(--accent-dark) !important; }
+    .nav-cta:hover {
+      background: var(--accent-dark) !important;
+      transform: translateY(-1px);
+    }
+
+    .nav-cta:active { transform: scale(0.97); }
 
     /* ─── HERO ─── */
     .hero {
-      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
-      padding: 100px 2rem 70px;
+      padding: 100px 2.5rem 80px;
       position: relative;
       overflow: hidden;
     }
 
-    /* Background: subtle geometric grid */
     .hero-bg {
       position: absolute;
       inset: 0;
@@ -127,51 +176,50 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(var(--border-light) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
-      background-size: 52px 52px;
-      opacity: 0.7;
-      mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 100%);
-      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 100%);
+        linear-gradient(rgba(200, 219, 232, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 219, 232, 0.4) 1px, transparent 1px);
+      background-size: 56px 56px;
+      opacity: 0.6;
+      mask-image: radial-gradient(ellipse 75% 65% at 50% 0%, black 20%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 0%, black 20%, transparent 100%);
     }
 
-    /* Blue gradient glow top-right */
     .hero-bg::after {
       content: "";
       position: absolute;
-      top: -15%;
-      right: -8%;
-      width: 700px;
-      height: 700px;
-      background: radial-gradient(circle, rgba(46, 109, 164, 0.18) 0%, transparent 68%);
+      top: -20%;
+      right: -10%;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(46, 109, 164, 0.14) 0%, transparent 65%);
       border-radius: 50%;
     }
 
     .hero-inner {
-      max-width: 1100px;
+      max-width: 1140px;
       margin: 0 auto;
       width: 100%;
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 4.5rem;
       align-items: center;
     }
 
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.45rem;
+      gap: 0.5rem;
       background: var(--accent-light);
       color: var(--accent-dark);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 500;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      padding: 0.3rem 0.8rem;
+      padding: 0.35rem 0.9rem;
       border-radius: 2rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
     }
 
     .hero-badge::before {
@@ -180,22 +228,23 @@
       background: var(--accent);
       border-radius: 50%;
       flex-shrink: 0;
-      animation: pulse 2s ease infinite;
+      animation: pulse 2.5s ease infinite;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
+      50% { opacity: 0.4; transform: scale(0.7); }
     }
 
     .hero-title {
       font-family: "Lora", serif;
-      font-size: clamp(2.4rem, 4.5vw, 3.5rem);
+      font-size: clamp(2.6rem, 4.5vw, 3.8rem);
       font-weight: 600;
-      line-height: 1.18;
-      letter-spacing: -0.02em;
+      line-height: 1.12;
+      letter-spacing: -0.035em;
       color: var(--ink);
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+      text-wrap: balance;
     }
 
     .hero-title em {
@@ -204,12 +253,12 @@
     }
 
     .hero-description {
-      font-size: 1.05rem;
+      font-size: 1.08rem;
       color: var(--ink-muted);
       font-weight: 300;
-      line-height: 1.7;
-      max-width: 440px;
-      margin-bottom: 2rem;
+      line-height: 1.75;
+      max-width: 460px;
+      margin-bottom: 2.25rem;
     }
 
     .hero-actions {
@@ -225,14 +274,21 @@
       background: var(--accent);
       color: white;
       text-decoration: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--radius);
+      padding: 0.8rem 1.6rem;
+      border-radius: var(--radius-sm);
       font-weight: 500;
       font-size: 0.95rem;
-      transition: background 0.2s, transform 0.15s;
+      transition: background 0.25s var(--ease-out), transform 0.15s var(--ease-out), box-shadow 0.25s var(--ease-out);
+      box-shadow: 0 2px 12px rgba(46, 109, 164, 0.2);
     }
 
-    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    .btn-primary:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 109, 164, 0.25);
+    }
+
+    .btn-primary:active { transform: translateY(0) scale(0.98); }
 
     .btn-secondary {
       display: inline-flex;
@@ -241,15 +297,21 @@
       background: transparent;
       color: var(--ink);
       text-decoration: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--radius);
+      padding: 0.8rem 1.6rem;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       font-weight: 400;
       font-size: 0.95rem;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.25s var(--ease-out), background 0.25s var(--ease-out), transform 0.15s var(--ease-out);
     }
 
-    .btn-secondary:hover { background: var(--surface); border-color: var(--accent-mid); }
+    .btn-secondary:hover {
+      background: var(--surface);
+      border-color: var(--accent-mid);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary:active { transform: scale(0.98); }
 
     .btn-donate {
       display: inline-flex;
@@ -258,62 +320,69 @@
       background: transparent;
       color: var(--accent);
       text-decoration: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--radius);
+      padding: 0.8rem 1.6rem;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--accent-mid);
       font-weight: 500;
       font-size: 0.95rem;
-      transition: background 0.2s, border-color 0.2s;
+      transition: background 0.25s var(--ease-out), transform 0.15s var(--ease-out);
     }
 
-    .btn-donate:hover { background: var(--accent-light); }
+    .btn-donate:hover { background: var(--accent-light); transform: translateY(-1px); }
+    .btn-donate:active { transform: scale(0.98); }
 
-    .btn-arrow { font-size: 1rem; transition: transform 0.2s; }
-    .btn-primary:hover .btn-arrow { transform: translateX(3px); }
+    .btn-arrow { font-size: 1rem; transition: transform 0.3s var(--ease-spring); }
+    .btn-primary:hover .btn-arrow { transform: translateX(4px); }
 
     /* Hero card */
     .hero-card {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 2rem;
-      box-shadow:
-        0 4px 40px rgba(46, 109, 164, 0.1),
-        0 1px 4px rgba(26, 43, 60, 0.05);
+      border: 1px solid rgba(200, 219, 232, 0.7);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem;
+      box-shadow: var(--shadow-xl);
       position: relative;
     }
 
     .hero-card::before {
       content: "";
       position: absolute;
-      top: 0; left: 2rem; right: 2rem;
+      top: 0; left: 2.25rem; right: 2.25rem;
       height: 3px;
       background: linear-gradient(90deg, var(--accent), var(--accent-mid));
       border-radius: 0 0 3px 3px;
+    }
+
+    /* Inner refraction border for glass effect */
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      pointer-events: none;
     }
 
     .hero-logo-area {
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1.25rem;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.35rem;
       border-bottom: 1px solid var(--border-light);
     }
 
     .hero-logo-img {
-      width: 54px;
-      height: 54px;
-      border-radius: 12px;
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius);
       object-fit: cover;
-      box-shadow: 0 2px 12px rgba(46,109,164,0.2);
+      box-shadow: 0 2px 12px rgba(46,109,164,0.18);
     }
-
-    .hero-logo-text-area {}
 
     .hero-logo-name {
       font-family: "Lora", serif;
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       font-weight: 600;
       color: var(--ink);
       line-height: 1.2;
@@ -323,12 +392,13 @@
       font-size: 0.78rem;
       color: var(--ink-muted);
       font-weight: 300;
+      margin-top: 0.1rem;
     }
 
     .card-label {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 500;
-      letter-spacing: 0.09em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--ink-faint);
       margin-bottom: 1rem;
@@ -338,56 +408,68 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0.75rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
     }
 
     .stat {
-      padding: 0.9rem;
+      padding: 1rem;
       background: var(--bg);
-      border-radius: 8px;
+      border-radius: var(--radius);
       border: 1px solid var(--border-light);
+      transition: border-color 0.25s var(--ease-out);
     }
+
+    .stat:hover { border-color: var(--accent-mid); }
 
     .stat-value {
       font-family: "Lora", serif;
-      font-size: 1.65rem;
+      font-size: 1.6rem;
       font-weight: 600;
       color: var(--accent);
       line-height: 1.1;
+      letter-spacing: -0.02em;
     }
 
     .stat-label {
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       color: var(--ink-muted);
-      margin-top: 0.15rem;
+      margin-top: 0.2rem;
+      font-weight: 400;
     }
 
     .card-tags {
       border-top: 1px solid var(--border-light);
-      padding-top: 1.1rem;
+      padding-top: 1.25rem;
     }
 
     .card-int-label {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--ink-faint);
       margin-bottom: 0.6rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
+      font-weight: 500;
     }
 
     .tag-pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
 
     .pill {
       font-size: 0.73rem;
-      padding: 0.22rem 0.6rem;
+      padding: 0.25rem 0.65rem;
       border-radius: 2rem;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--ink-muted);
+      transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+    }
+
+    .pill:hover {
+      border-color: var(--accent-mid);
+      background: var(--accent-light);
     }
 
     .pill-blue {
@@ -397,13 +479,151 @@
       font-weight: 500;
     }
 
+    /* ─── CARD TOUR (Phone Scrollytelling) ─── */
+    #card-tour {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .tour-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    /* Phone rail — MUST NOT have overflow:hidden (breaks sticky).
+       align-self: stretch ensures the rail is as tall as the steps column
+       so the sticky element has scroll room. */
+    .tour-phone-rail {
+      align-self: stretch;
+    }
+
+    .tour-phone-sticky {
+      position: sticky;
+      top: 88px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .phone-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      aspect-ratio: 1298 / 2592;   /* matches phone-transparent.png */
+    }
+
+    .phone-frame-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* Screen clip: positioned to match the screen area inside the phone bezels */
+    .phone-screen-clip {
+      position: absolute;
+      top: 3.5%;
+      left: 5.5%;
+      right: 5.5%;
+      bottom: 3.5%;
+      overflow: hidden;
+      z-index: 1;
+      border-radius: 7%;
+      background: #111;
+    }
+
+    #anki-screenshot {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      left: 0;
+      display: block;
+      will-change: transform;
+    }
+
+    /* Step panels */
+    .tour-steps { display: flex; flex-direction: column; }
+
+    .tour-step {
+      min-height: 60vh;
+      display: flex;
+      align-items: center;
+      padding: 1.5rem 0;
+    }
+
+    .tour-step-inner {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem 2rem;
+      position: relative;
+      opacity: 0.4;
+      transform: translateY(10px);
+      transition:
+        opacity 0.35s var(--ease-out),
+        transform 0.35s var(--ease-out),
+        border-color 0.35s var(--ease-out),
+        box-shadow 0.35s var(--ease-out);
+    }
+
+    /* Left accent bar */
+    .tour-step-inner::after {
+      content: "";
+      position: absolute;
+      left: 0; top: 1.5rem; bottom: 1.5rem;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+      transform: scaleY(0);
+      transform-origin: top;
+      transition: transform 0.35s var(--ease-out);
+    }
+
+    .tour-step.active .tour-step-inner {
+      opacity: 1;
+      transform: translateY(0);
+      border-color: rgba(122, 175, 212, 0.45);
+      box-shadow: var(--shadow-md);
+    }
+    .tour-step.active .tour-step-inner::after  { transform: scaleY(1); }
+
+    .tour-step-num {
+      font-family: "Lora", serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--accent-mid);
+      margin-bottom: 0.6rem;
+    }
+
+    .tour-step-title {
+      font-family: "Lora", serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin-bottom: 0.75rem;
+    }
+
+    .tour-step-desc {
+      font-size: 0.92rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.75;
+    }
+
     /* ─── SECTION COMMON ─── */
     section {
-      padding: 6rem 2rem;
+      padding: 7rem 2.5rem;
     }
 
     .section-inner {
-      max-width: 1100px;
+      max-width: 1140px;
       margin: 0 auto;
     }
 
@@ -413,24 +633,25 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--accent);
-      margin-bottom: 0.7rem;
+      margin-bottom: 0.8rem;
     }
 
     .section-title {
       font-family: "Lora", serif;
-      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-size: clamp(1.9rem, 3vw, 2.6rem);
       font-weight: 600;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
       color: var(--ink);
-      line-height: 1.22;
-      margin-bottom: 0.9rem;
+      line-height: 1.18;
+      margin-bottom: 1rem;
+      text-wrap: balance;
     }
 
     .section-subtitle {
-      font-size: 1rem;
+      font-size: 1.05rem;
       color: var(--ink-muted);
       font-weight: 300;
-      line-height: 1.7;
+      line-height: 1.75;
       max-width: 540px;
     }
 
@@ -438,57 +659,78 @@
       margin-bottom: 3.5rem;
     }
 
-    /* ─── FEATURES ─── */
+    /* ─── FEATURES (Bento Grid) ─── */
     #features {
       background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
     }
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
     }
 
     .feature-card {
-      padding: 2rem;
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      padding: 2rem 2.25rem;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
       position: relative;
-      transition: background 0.2s;
+      transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), transform 0.2s var(--ease-out);
     }
 
-    .feature-card:hover { background: var(--bg); }
-    .feature-card:nth-child(3n) { border-right: none; }
-    .feature-card:nth-child(4), .feature-card:nth-child(5), .feature-card:nth-child(6) { border-bottom: none; }
+    .feature-card:hover {
+      border-color: var(--accent-mid);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
 
+    .feature-card:active { transform: translateY(0) scale(0.995); }
+
+    /* Featured card: spans full width with horizontal layout */
     .feature-card.featured {
-      background: linear-gradient(135deg, var(--accent-light) 0%, rgba(255,255,255,0) 60%);
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.5rem;
+      align-items: start;
+      background: linear-gradient(135deg, var(--accent-light) 0%, rgba(212, 229, 245, 0.3) 50%, var(--bg) 100%);
+      border-color: rgba(122, 175, 212, 0.3);
+    }
+
+    .feature-card.featured .feature-icon {
+      margin-bottom: 0;
+      width: 48px;
+      height: 48px;
     }
 
     .feature-card.featured::after {
-      content: "FEATURED";
+      content: "Featured";
       position: absolute;
-      top: 1rem; right: 1rem;
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      font-weight: 600;
+      top: 1.25rem; right: 1.25rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      font-weight: 500;
       color: var(--accent);
-      background: white;
+      background: var(--surface);
       border: 1px solid var(--accent-mid);
-      padding: 0.1rem 0.4rem;
+      padding: 0.15rem 0.55rem;
       border-radius: 2rem;
+      text-transform: uppercase;
+    }
+
+    /* Last card spans full width for visual balance */
+    .feature-card:last-child {
+      grid-column: 1 / -1;
     }
 
     .feature-icon {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       background: var(--accent-light);
-      border-radius: 10px;
+      border-radius: var(--radius);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -507,31 +749,53 @@
 
     .feature-title {
       font-family: "Lora", serif;
-      font-size: 1.02rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--ink);
-      margin-bottom: 0.45rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
     }
 
     .feature-desc {
-      font-size: 0.87rem;
+      font-size: 0.88rem;
       color: var(--ink-muted);
       font-weight: 300;
-      line-height: 1.65;
+      line-height: 1.7;
     }
 
     .feature-link {
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       color: var(--accent);
       text-decoration: none;
-      margin-top: 0.75rem;
+      margin-top: 0.85rem;
       font-weight: 500;
+      transition: gap 0.3s var(--ease-spring);
     }
 
-    .feature-link:hover { text-decoration: underline; }
+    .feature-link:hover { gap: 0.45rem; }
+
+    /* ─── SHOWCASE ─── */
+    .showcase-video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .showcase-video-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
 
     /* ─── ADDON SPOTLIGHT ─── */
     #addon {
@@ -540,17 +804,17 @@
 
     .addon-layout {
       display: grid;
-      grid-template-columns: 1fr 1.1fr;
-      gap: 4rem;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 4.5rem;
       align-items: center;
     }
 
     .addon-visual {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      border: 1px solid rgba(200, 219, 232, 0.7);
+      border-radius: var(--radius-xl);
       overflow: hidden;
-      box-shadow: 0 8px 40px rgba(46,109,164,0.12);
+      box-shadow: var(--shadow-xl);
       position: relative;
     }
 
@@ -560,25 +824,7 @@
       top: 0; left: 0; right: 0;
       height: 3px;
       background: linear-gradient(90deg, var(--accent), var(--accent-mid));
-    }
-
-    .showcase-video-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .showcase-video-wrapper iframe {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      border: 0;
-      border-radius: 12px;
+      z-index: 1;
     }
 
     .addon-video-wrapper {
@@ -620,18 +866,18 @@
       font-weight: 500;
       color: var(--accent);
       background: var(--accent-light);
-      padding: 0.2rem 0.6rem;
+      padding: 0.22rem 0.65rem;
       border-radius: 2rem;
     }
 
     .addon-screenshot {
       width: 100%;
       display: block;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-light);
     }
 
     .addon-info-footer {
-      padding: 1.25rem 1.5rem;
+      padding: 1.25rem 1.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -639,35 +885,34 @@
       gap: 0.75rem;
     }
 
-    .addon-content {}
-
     .addon-features {
       list-style: none;
-      margin: 1.5rem 0 2rem;
+      margin: 1.75rem 0 2.25rem;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.85rem;
     }
 
     .addon-feature {
       display: flex;
       align-items: flex-start;
-      gap: 0.75rem;
-      font-size: 0.9rem;
+      gap: 0.85rem;
+      font-size: 0.92rem;
       color: var(--ink-muted);
       font-weight: 300;
+      line-height: 1.6;
     }
 
     .addon-feature-icon {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       background: var(--accent-light);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      margin-top: 0.05rem;
+      margin-top: 0.1rem;
     }
 
     .addon-feature-icon svg {
@@ -688,13 +933,13 @@
     /* ─── HOW TO ─── */
     #how-to {
       background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
     }
 
     .howto-layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 5rem;
       align-items: start;
     }
@@ -707,9 +952,9 @@
 
     .step {
       display: grid;
-      grid-template-columns: 40px 1fr;
-      gap: 1rem;
-      padding: 1.4rem 0;
+      grid-template-columns: 44px 1fr;
+      gap: 1.1rem;
+      padding: 1.5rem 0;
       border-bottom: 1px solid var(--border-light);
     }
 
@@ -717,60 +962,63 @@
     .step:last-child { border-bottom: none; }
 
     .step-num {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
       background: var(--bg);
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 500;
       color: var(--ink-muted);
       flex-shrink: 0;
-      margin-top: 0.1rem;
-      transition: all 0.2s;
+      margin-top: 0.05rem;
+      transition: all 0.3s var(--ease-out);
     }
 
     .step:hover .step-num {
       background: var(--accent);
       border-color: var(--accent);
       color: white;
+      transform: scale(1.05);
     }
 
     .step-title {
       font-family: "Lora", serif;
-      font-size: 1rem;
+      font-size: 1.02rem;
       font-weight: 600;
       color: var(--ink);
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
     }
 
     .step-desc {
-      font-size: 0.87rem;
+      font-size: 0.88rem;
       color: var(--ink-muted);
       font-weight: 300;
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
     .step-link {
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       color: var(--accent);
       text-decoration: none;
-      margin-top: 0.4rem;
+      margin-top: 0.5rem;
       font-weight: 500;
+      transition: gap 0.3s var(--ease-spring);
     }
 
-    .step-link:hover { text-decoration: underline; }
+    .step-link:hover { gap: 0.5rem; }
 
     /* Aside cards */
     .howto-aside {
       position: sticky;
-      top: 82px;
+      top: 84px;
       display: flex;
       flex-direction: column;
       gap: 1rem;
@@ -778,25 +1026,31 @@
 
     .aside-card {
       background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.4rem;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem;
+      transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+    }
+
+    .aside-card:hover {
+      border-color: var(--accent-mid);
+      box-shadow: var(--shadow-sm);
     }
 
     .aside-card-title {
       font-family: "Lora", serif;
-      font-size: 0.93rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--ink);
-      margin-bottom: 0.65rem;
+      margin-bottom: 0.7rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.55rem;
     }
 
     .aside-card-title svg {
-      width: 15px;
-      height: 15px;
+      width: 16px;
+      height: 16px;
       stroke: var(--accent);
       fill: none;
       stroke-width: 2;
@@ -805,11 +1059,11 @@
     }
 
     .aside-card p {
-      font-size: 0.84rem;
+      font-size: 0.86rem;
       color: var(--ink-muted);
       font-weight: 300;
-      line-height: 1.6;
-      margin-bottom: 1rem;
+      line-height: 1.65;
+      margin-bottom: 1.1rem;
     }
 
     .aside-card-link {
@@ -822,12 +1076,13 @@
       text-decoration: none;
       border: 1px solid var(--accent-mid);
       background: var(--accent-light);
-      padding: 0.38rem 0.85rem;
-      border-radius: var(--radius);
-      transition: background 0.2s;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius-sm);
+      transition: background 0.25s var(--ease-out), transform 0.15s var(--ease-out);
     }
 
-    .aside-card-link:hover { background: #BDD6EC; }
+    .aside-card-link:hover { background: #BDD6EC; transform: translateY(-1px); }
+    .aside-card-link:active { transform: scale(0.97); }
 
     /* ─── RESOURCES ─── */
     #resources {
@@ -843,35 +1098,37 @@
     .resource-card {
       display: flex;
       flex-direction: column;
-      padding: 1.4rem;
+      padding: 1.5rem 1.75rem;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
       text-decoration: none;
       color: var(--ink);
-      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      transition: border-color 0.3s var(--ease-out), transform 0.2s var(--ease-out), box-shadow 0.3s var(--ease-out);
     }
 
     .resource-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(46,109,164,0.12);
+      border-color: var(--accent-mid);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
     }
 
+    .resource-card:active { transform: translateY(0) scale(0.99); }
+
     .resource-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 0.9rem;
+      margin-bottom: 1rem;
       flex-shrink: 0;
     }
 
     .resource-icon svg {
-      width: 17px;
-      height: 17px;
+      width: 18px;
+      height: 18px;
       fill: none;
       stroke-width: 1.6;
       stroke-linecap: round;
@@ -886,65 +1143,89 @@
     .ri-green svg { stroke: #2D7A47; }
     .ri-purple { background: #EDE9F6; }
     .ri-purple svg { stroke: #6840C4; }
-    .ri-red { background: #FEECEC; }
-    .ri-red svg { stroke: #C0392B; }
 
     .resource-title {
       font-family: "Lora", serif;
-      font-size: 0.93rem;
+      font-size: 0.95rem;
       font-weight: 600;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
     }
 
     .resource-desc {
-      font-size: 0.79rem;
+      font-size: 0.82rem;
       color: var(--ink-muted);
       font-weight: 300;
-      line-height: 1.55;
+      line-height: 1.6;
       flex: 1;
     }
 
     .resource-arrow {
-      margin-top: 0.9rem;
-      font-size: 0.77rem;
+      margin-top: 1rem;
+      font-size: 0.78rem;
       color: var(--accent);
       font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 0.2rem;
+      gap: 0.25rem;
       opacity: 0;
-      transition: opacity 0.2s;
+      transform: translateX(-4px);
+      transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
     }
 
-    .resource-card:hover .resource-arrow { opacity: 1; }
+    .resource-card:hover .resource-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
 
     /* ─── DONATE BANNER ─── */
     .donate-banner {
-      background: linear-gradient(135deg, var(--accent-dark), var(--accent));
-      border-radius: 14px;
-      padding: 2.5rem 3rem;
+      background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
+      border-radius: var(--radius-xl);
+      padding: 3rem 3.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 2rem;
+      gap: 2.5rem;
       flex-wrap: wrap;
-      margin-top: 3rem;
+      margin-top: 3.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle inner glow */
+    .donate-banner::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .donate-text {
+      position: relative;
+      z-index: 1;
     }
 
     .donate-text h3 {
       font-family: "Lora", serif;
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 600;
       color: white;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
     }
 
     .donate-text p {
-      font-size: 0.9rem;
-      color: rgba(255,255,255,0.75);
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.72);
       font-weight: 300;
-      max-width: 420px;
-      line-height: 1.6;
+      max-width: 440px;
+      line-height: 1.7;
     }
 
     .btn-donate-white {
@@ -954,25 +1235,33 @@
       background: white;
       color: var(--accent-dark);
       text-decoration: none;
-      padding: 0.8rem 1.8rem;
-      border-radius: var(--radius);
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius-sm);
       font-weight: 600;
       font-size: 0.95rem;
       white-space: nowrap;
-      transition: opacity 0.2s, transform 0.15s;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.2s var(--ease-out), box-shadow 0.3s var(--ease-out);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
 
-    .btn-donate-white:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-donate-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-donate-white:active { transform: scale(0.97); }
 
     /* ─── FOOTER ─── */
     footer {
-      padding: 2.5rem 2rem;
-      border-top: 1px solid var(--border);
+      padding: 2.75rem 2.5rem;
+      border-top: 1px solid var(--border-light);
       background: var(--surface);
     }
 
     .footer-inner {
-      max-width: 1100px;
+      max-width: 1140px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -1016,55 +1305,79 @@
 
     .footer-links {
       display: flex;
-      gap: 1.5rem;
+      gap: 0.4rem;
     }
 
     .footer-links a {
       font-size: 0.8rem;
       color: var(--ink-muted);
       text-decoration: none;
-      transition: color 0.2s;
+      padding: 0.3rem 0.6rem;
+      border-radius: var(--radius-sm);
+      transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
     }
 
-    .footer-links a:hover { color: var(--accent); }
+    .footer-links a:hover {
+      color: var(--accent);
+      background: rgba(46, 109, 164, 0.06);
+    }
 
     @media (max-width: 640px) {
       footer { padding: 2rem 1.25rem; }
       .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
-      .footer-links { flex-wrap: wrap; gap: 0.75rem 1.25rem; }
+      .footer-links { flex-wrap: wrap; gap: 0.25rem; }
       .footer-sep { display: none; }
     }
 
     /* ─── ANIMATIONS ─── */
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(22px); }
+      from { opacity: 0; transform: translateY(28px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .hero-badge      { animation: fadeInUp 0.5s ease both 0.1s; }
-    .hero-title      { animation: fadeInUp 0.5s ease both 0.2s; }
-    .hero-description { animation: fadeInUp 0.5s ease both 0.3s; }
-    .hero-actions    { animation: fadeInUp 0.5s ease both 0.4s; }
-    .hero-card       { animation: fadeInUp 0.6s ease both 0.3s; }
+    .hero-badge      { animation: fadeInUp 0.6s var(--ease-out) both 0.1s; }
+    .hero-title      { animation: fadeInUp 0.6s var(--ease-out) both 0.2s; }
+    .hero-description { animation: fadeInUp 0.6s var(--ease-out) both 0.3s; }
+    .hero-actions    { animation: fadeInUp 0.6s var(--ease-out) both 0.4s; }
+    .hero-card       { animation: fadeInUp 0.7s var(--ease-out) both 0.35s; }
 
     /* ─── RESPONSIVE ─── */
     @media (max-width: 1000px) {
+      .tour-layout { gap: 2.5rem; }
+      .phone-wrap  { max-width: 100%; }
+      .tour-step   { min-height: 50vh; }
+      .tour-step-inner::before { display: none; }
       .hero-inner, .addon-layout, .howto-layout { grid-template-columns: 1fr; gap: 2.5rem; }
       .addon-layout { direction: ltr; }
       .features-grid { grid-template-columns: 1fr 1fr; }
-      .feature-card:nth-child(3n) { border-right: 1px solid var(--border); }
-      .feature-card:nth-child(2n) { border-right: none; }
-      .feature-card:nth-child(5), .feature-card:nth-child(6) { border-bottom: none; }
-      .feature-card:nth-child(3) { border-bottom: 1px solid var(--border); }
+      .feature-card.featured {
+        grid-column: 1 / -1;
+        grid-template-columns: auto 1fr;
+      }
       .howto-aside { position: static; }
-      .resources-grid { grid-template-columns: 1fr 1fr; }
-      .donate-banner { flex-direction: column; text-align: center; align-items: center; }
+
+      .donate-banner { flex-direction: column; text-align: center; align-items: center; padding: 2.5rem 2rem; }
+      .donate-text p { max-width: none; }
+    }
+
+    @media (max-width: 800px) {
+      .tour-layout { grid-template-columns: 1fr; gap: 2rem; }
+      .tour-phone-sticky { position: static; }
+      .phone-wrap  { max-width: 200px; margin: 0 auto; }
+      .tour-step   { min-height: auto; padding: 0.5rem 0; }
+      .tour-step-inner { opacity: 1; transform: none; }
+      .tour-step-inner::after { transform: scaleY(1); }
+      .resources-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 600px) {
+      section { padding: 5rem 1.25rem; }
+      nav { padding: 0 1.25rem; }
+      .hero { padding: 90px 1.25rem 60px; }
       .nav-links { display: none; }
       .features-grid { grid-template-columns: 1fr; }
-      .feature-card { border-right: none !important; }
+      .feature-card.featured { grid-template-columns: 1fr; grid-column: 1; }
+      .feature-card:last-child { grid-column: 1; }
       .resources-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
       .donate-banner { padding: 2rem 1.5rem; }
@@ -1084,7 +1397,7 @@
     <li><a href="#addon">Anki Addon</a></li>
     <li><a href="getting-started.html">Getting Started</a></li>
     <li><a href="submission-guidelines.html">Submit Cards</a></li>
-    <li><a href="register.html">Register</a></li>
+    <li><a href="register.html" class="nav-cta">Register</a></li>
   </ul>
 </nav>
 
@@ -1101,13 +1414,13 @@
       </p>
       <div class="hero-actions">
         <a class="btn-primary" href="getting-started.html">
-          Get Started <span class="btn-arrow">→</span>
+          Get Started <span class="btn-arrow">&rarr;</span>
         </a>
         <a class="btn-secondary" href="register.html">
           Join as a Member
         </a>
         <a class="btn-donate" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">
-          ♥ Donate
+          Donate
         </a>
       </div>
     </div>
@@ -1117,13 +1430,13 @@
         <img class="hero-logo-img" src="logo.png" alt="Malleus Clinical Medicine" />
         <div class="hero-logo-text-area">
           <div class="hero-logo-name">Malleus Clinical Medicine</div>
-          <div class="hero-logo-sub">Open-source · AU/NZ aligned · Free</div>
+          <div class="hero-logo-sub">Open-source &middot; AU/NZ aligned &middot; Free</div>
         </div>
       </div>
       <div class="card-label">Deck at a glance</div>
       <div class="stats-grid">
         <div class="stat">
-          <div class="stat-value">3,800+</div>
+          <div class="stat-value">8,000+</div>
           <div class="stat-label">Flashcards</div>
         </div>
         <div class="stat">
@@ -1155,45 +1468,134 @@
   </div>
 </section>
 
+<!-- CARD TOUR -->
+<section id="card-tour">
+  <div class="section-inner">
+
+    <div class="tour-header section-header reveal">
+      <div class="section-eyebrow">Inside a Malleus Card</div>
+      <h2 class="section-title">Every feature,<br><em>by design, for learning.</em></h2>
+      <p class="section-subtitle">Scroll to explore what makes Malleus cards different.</p>
+    </div>
+
+    <div class="tour-layout">
+
+      <!-- LEFT: sticky phone mockup -->
+      <div class="tour-phone-rail">
+        <div class="tour-phone-sticky">
+          <div class="phone-wrap" id="phone-wrap">
+            <div class="phone-screen-clip" id="phone-screen-clip">
+              <img id="anki-screenshot" src="anki-screenshot.jpg" alt="Anki card screenshot">
+            </div>
+            <img class="phone-frame-img" src="phone-transparent.png" alt="Phone frame" aria-hidden="true">
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: scrollable annotation steps -->
+      <div class="tour-steps">
+
+        <!-- data-scroll = how far down the screenshot to scroll (0% = top, 100% = bottom) -->
+        <div class="tour-step" data-step="1" data-scroll="0">
+          <div class="tour-step-inner">
+            <div class="tour-step-num">01</div>
+            <h3 class="tour-step-title">Randomised elements to enhance learning</h3>
+            <p class="tour-step-desc">
+              Some cards use randomised elements, so you do not pattern match and instead tests understanding
+            </p>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="2" data-scroll="10">
+          <div class="tour-step-inner">
+            <div class="tour-step-num">02</div>
+            <h3 class="tour-step-title">Question-Answer card style</h3>
+            <p class="tour-step-desc">
+              Cards use a clean cloze deletion question-answer format,
+              forcing active recall on the single most important clinical fact.
+            </p>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="3" data-scroll="22">
+          <div class="tour-step-inner">
+            <div class="tour-step-num">03</div>
+            <h3 class="tour-step-title">Useful extra content</h3>
+            <p class="tour-step-desc">
+              The extra field gives you the clinical reasoning behind the answer —
+              not just what, but why — so knowledge sticks beyond the exam.
+            </p>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="4" data-scroll="60">
+          <div class="tour-step-inner">
+            <div class="tour-step-num">04</div>
+            <h3 class="tour-step-title">Supporting content one click away</h3>
+            <p class="tour-step-desc">
+              Direct links and content to eTG Complete, AMH Online, and other AU/NZ resources
+              are embedded in every card — go deeper whenever you need to.
+            </p>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="5" data-scroll="76">
+          <div class="tour-step-inner">
+            <div class="tour-step-num">05</div>
+            <h3 class="tour-step-title">Comprehensive tagging structure</h3>
+            <p class="tour-step-desc">
+              Every card is tagged by rotation, yield, and subject. Study only
+              what iss relevant to where you are right now in your training.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FEATURES -->
 <section id="features">
   <div class="section-inner">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-eyebrow">Why Malleus</div>
       <h2 class="section-title">Built by students,<br>for students</h2>
       <p class="section-subtitle">
-        Every aspect of Malleus is shaped by the people who use it — a living deck that grows
+        Every aspect of Malleus is shaped by the people who use it &mdash; a living deck that grows
         with every contribution and stays aligned with Australian clinical practice.
       </p>
     </div>
 
     <div class="features-grid">
-      <div class="feature-card featured">
+      <div class="feature-card featured reveal reveal-delay-1">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </div>
-        <div class="feature-title">Anki Addon</div>
-        <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging — all without leaving Anki.</p>
-        <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) ↗</a>
+        <div>
+          <div class="feature-title">Anki Addon</div>
+          <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging &mdash; all without leaving Anki.</p>
+          <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) &nearr;</a>
+        </div>
       </div>
 
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-2">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div class="feature-title">Collaborative &amp; Maintained</div>
-        <p class="feature-desc">Cards are created, reviewed and updated by a community of medical students and junior doctors. No stale content — the deck evolves with feedback.</p>
+        <p class="feature-desc">Cards are created, reviewed and updated by a community of medical students and junior doctors. No stale content &mdash; the deck evolves with feedback.</p>
       </div>
 
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-3">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <div class="feature-title">AU/NZ Curriculum Aligned</div>
-        <p class="feature-desc">Content references Australian guidelines — eTG Complete, AMH, and local clinical standards — rather than US-centric resources.</p>
+        <p class="feature-desc">Content references Australian guidelines &mdash; eTG Complete, AMH, and local clinical standards &mdash; rather than US-centric resources.</p>
       </div>
 
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-4">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
@@ -1201,15 +1603,15 @@
         <p class="feature-desc">Malleus is free to use and contribute to. Hosted on AnkiHub, anyone can suggest card edits and improvements. AnkiHub offers full scholarships so the plugin costs nothing.</p>
       </div>
 
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-5">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><rect x="9" y="11" width="13" height="10" rx="2" ry="2"/><path d="M5 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v2"/></svg>
         </div>
         <div class="feature-title">Sort by Rotation &amp; Subject</div>
-        <p class="feature-desc">A detailed tagging structure lets you filter cards by rotation, subject, or topic — so you can study exactly what is relevant to where you are in your training.</p>
+        <p class="feature-desc">A detailed tagging structure lets you filter cards by rotation, subject, or topic &mdash; so you can study exactly what is relevant to where you are in your training.</p>
       </div>
 
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-6">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
@@ -1223,14 +1625,14 @@
 <!-- NOTE TYPE SHOWCASE -->
 <section id="showcase">
   <div class="section-inner">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-eyebrow">The Malleus Note Type</div>
       <h2 class="section-title">Built for clinical medicine</h2>
       <p class="section-subtitle">
         See how the Malleus note type structures clinical information for effective spaced repetition learning.
       </p>
     </div>
-    <div class="showcase-video-wrapper">
+    <div class="showcase-video-wrapper reveal">
       <iframe width="560" height="315" src="https://www.youtube.com/embed/xpgUj3s4hKw?si=Inrio06Rlevq-gRu" title="Malleus Note Type Showcase" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </div>
   </div>
@@ -1240,12 +1642,12 @@
 <section id="addon">
   <div class="section-inner">
     <div class="addon-layout">
-      <div class="addon-content">
+      <div class="addon-content reveal">
         <div class="section-eyebrow">Malleus Anki Addon</div>
         <h2 class="section-title">Your deck,<br>supercharged</h2>
         <p class="section-subtitle">
           The Malleus Anki Addon connects directly to the Malleus Notion database so you can manage
-          cards without ever leaving Anki. Search, find, and create — all in one place.
+          cards without ever leaving Anki. Search, find, and create &mdash; all in one place.
         </p>
 
         <ul class="addon-features">
@@ -1259,7 +1661,7 @@
           </li>
           <li class="addon-feature">
             <div class="addon-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <span>Create new cards with correct Malleus tagging — select the right subtag or use Main Tag</span>
+            <span>Create new cards with correct Malleus tagging &mdash; select the right subtag or use Main Tag</span>
           </li>
           <li class="addon-feature">
             <div class="addon-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -1269,7 +1671,7 @@
 
         <div class="addon-actions">
           <a class="btn-primary" href="https://ankiweb.net/shared/info/620451841" target="_blank">
-            Install Addon <span class="btn-arrow">→</span>
+            Install Addon <span class="btn-arrow">&rarr;</span>
           </a>
           <a class="btn-secondary" href="https://github.com/Sabicool/Malleus-Anki-Addon" target="_blank">
             View on GitHub
@@ -1277,13 +1679,13 @@
         </div>
       </div>
 
-      <div class="addon-visual">
+      <div class="addon-visual reveal reveal-delay-2">
         <img class="addon-screenshot" src="addon.png" alt="Malleus Anki Addon screenshot" />
         <div class="addon-info-footer">
           <div class="addon-info-label">
-            Addon code: <strong>620451841</strong> &nbsp;·&nbsp; Anki 2.1+
+            Addon code: <strong>620451841</strong> &nbsp;&middot;&nbsp; Anki 2.1+
           </div>
-          <span class="addon-badge">Open Source · AGPL-3.0</span>
+          <span class="addon-badge">Open Source &middot; AGPL-3.0</span>
         </div>
       </div>
     </div>
@@ -1295,90 +1697,92 @@
   <div class="section-inner">
     <div class="howto-layout">
       <div>
-        <div class="section-eyebrow">Getting Started</div>
-        <h2 class="section-title">Up and running<br>in minutes</h2>
-        <p class="section-subtitle" style="margin-bottom: 2.5rem;">
-          Follow these steps to install the deck and start reviewing clinical medicine flashcards today.
-        </p>
+        <div class="section-header reveal">
+          <div class="section-eyebrow">Getting Started</div>
+          <h2 class="section-title">Up and running<br>in minutes</h2>
+          <p class="section-subtitle">
+            Follow these steps to install the deck and start reviewing clinical medicine flashcards today.
+          </p>
+        </div>
 
         <ol class="steps-list">
-          <li class="step">
+          <li class="step reveal reveal-delay-1">
             <div class="step-num">1</div>
             <div class="step-content">
               <div class="step-title">Install Anki</div>
               <p class="step-desc">Download and install Anki (free) for Windows, macOS, or Linux. Anki is the spaced-repetition engine that powers the deck.</p>
-              <a class="step-link" href="https://apps.ankiweb.net/" target="_blank">Download Anki ↗</a>
+              <a class="step-link" href="https://apps.ankiweb.net/" target="_blank">Download Anki &nearr;</a>
             </div>
           </li>
-          <li class="step">
+          <li class="step reveal reveal-delay-2">
             <div class="step-num">2</div>
             <div class="step-content">
-              <div class="step-title">Create a Free AnkiHub Account</div>
-              <p class="step-desc">Malleus is distributed through AnkiHub which handles deck syncing and community suggestions. Create a free account — AnkiHub offers full scholarships so the plugin costs nothing.</p>
-              <a class="step-link" href="https://app.ankihub.net/" target="_blank">Go to AnkiHub ↗</a>
+              <div class="step-title">Create a free AnkiHub account</div>
+              <p class="step-desc">Malleus is distributed through AnkiHub which handles deck syncing and community suggestions. Create a free account &mdash; AnkiHub offers full scholarships so the plugin costs nothing.</p>
+              <a class="step-link" href="https://app.ankihub.net/" target="_blank">Go to AnkiHub &nearr;</a>
             </div>
           </li>
-          <li class="step">
+          <li class="step reveal reveal-delay-3">
             <div class="step-num">3</div>
             <div class="step-content">
-              <div class="step-title">Install the AnkiHub Addon</div>
+              <div class="step-title">Install the AnkiHub addon</div>
               <p class="step-desc">Install the AnkiHub addon (code: 1322529746) to connect Anki to AnkiHub. This keeps your deck automatically up to date with community improvements.</p>
-              <a class="step-link" href="https://ankiweb.net/shared/info/1322529746" target="_blank">Get AnkiHub Addon ↗</a>
+              <a class="step-link" href="https://ankiweb.net/shared/info/1322529746" target="_blank">Get AnkiHub Addon &nearr;</a>
             </div>
           </li>
-          <li class="step">
+          <li class="step reveal reveal-delay-4">
             <div class="step-num">4</div>
             <div class="step-content">
               <div class="step-title">Subscribe to Malleus on AnkiHub</div>
               <p class="step-desc">Search for "Malleus Clinical Medicine" on AnkiHub and subscribe. The deck will download automatically into your Anki library.</p>
-              <a class="step-link" href="https://app.ankihub.net/decks/" target="_blank">Find the Deck ↗</a>
+              <a class="step-link" href="https://app.ankihub.net/decks/" target="_blank">Find the Deck &nearr;</a>
             </div>
           </li>
-          <li class="step">
+          <li class="step reveal reveal-delay-5">
             <div class="step-num">5</div>
             <div class="step-content">
               <div class="step-title">Install the Malleus Anki Addon</div>
               <p class="step-desc">Optionally install the Malleus Anki Addon (code: 620451841) to search and create cards directly from within Anki using the Malleus Notion database.</p>
-              <a class="step-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Get Malleus Addon ↗</a>
+              <a class="step-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Get Malleus Addon &nearr;</a>
             </div>
           </li>
-          <li class="step">
+          <li class="step reveal reveal-delay-6">
             <div class="step-num">6</div>
             <div class="step-content">
-              <div class="step-title">Read the Full Guide</div>
+              <div class="step-title">Read the full guide</div>
               <p class="step-desc">The Notion guide covers the tagging structure, how to make card suggestions, and how to customise the deck to your year and rotation.</p>
-              <a class="step-link" href="getting-started.html">Open Getting Started Guide ↗</a>
+              <a class="step-link" href="getting-started.html">Open Getting Started Guide &nearr;</a>
             </div>
           </li>
         </ol>
       </div>
 
       <div class="howto-aside">
-        <div class="aside-card">
+        <div class="aside-card reveal">
           <div class="aside-card-title">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             Submission Guidelines
           </div>
-          <p>Want to contribute? Read the submission guidelines before suggesting cards — covers format, tagging structure, and quality standards.</p>
-          <a class="aside-card-link" href="submission-guidelines.html">View Guidelines →</a>
+          <p>Want to contribute? Read the submission guidelines before suggesting cards &mdash; covers format, tagging structure, and quality standards.</p>
+          <a class="aside-card-link" href="submission-guidelines.html">View Guidelines &rarr;</a>
         </div>
 
-        <div class="aside-card">
+        <div class="aside-card reveal reveal-delay-1">
           <div class="aside-card-title">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Join the Community
           </div>
           <p>Get help, share resources and stay up to date with deck updates by joining the Malleus Discord and Facebook group.</p>
-          <a class="aside-card-link" href="https://discord.gg/4WqgJzjVyH" target="_blank">Join Discord →</a>
+          <a class="aside-card-link" href="https://discord.gg/4WqgJzjVyH" target="_blank">Join Discord &rarr;</a>
         </div>
 
-        <div class="aside-card">
+        <div class="aside-card reveal reveal-delay-2">
           <div class="aside-card-title">
             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             Support the Project
           </div>
           <p>Malleus is made by students, for students. Donations help cover hosting and project costs so we can keep improving the deck.</p>
-          <a class="aside-card-link" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">♥ Donate →</a>
+          <a class="aside-card-link" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate &rarr;</a>
         </div>
       </div>
     </div>
@@ -1388,94 +1792,94 @@
 <!-- RESOURCES -->
 <section id="resources">
   <div class="section-inner">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-eyebrow">All Resources</div>
       <h2 class="section-title">Everything you need</h2>
       <p class="section-subtitle">All the key links for the Malleus project in one place.</p>
     </div>
 
     <div class="resources-grid">
-      <a class="resource-card" href="https://malleuscm.notion.site/" target="_blank">
+      <a class="resource-card reveal reveal-delay-1" href="https://malleuscm.notion.site/" target="_blank">
         <div class="resource-icon ri-blue">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
         <div class="resource-title">Notion Hub</div>
         <p class="resource-desc">Central home for all Malleus documentation, guides, card structure and project updates.</p>
-        <div class="resource-arrow">Visit ↗</div>
+        <div class="resource-arrow">Visit &nearr;</div>
       </a>
 
-      <a class="resource-card" href="getting-started.html">
+      <a class="resource-card reveal reveal-delay-2" href="getting-started.html">
         <div class="resource-icon ri-green">
           <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         </div>
         <div class="resource-title">Getting Started Guide</div>
         <p class="resource-desc">Step-by-step guide to installing the deck, setting up AnkiHub, and getting the most out of Malleus.</p>
-        <div class="resource-arrow">Read ↗</div>
+        <div class="resource-arrow">Read &nearr;</div>
       </a>
 
-      <a class="resource-card" href="https://ankiweb.net/shared/info/620451841" target="_blank">
+      <a class="resource-card reveal reveal-delay-3" href="https://ankiweb.net/shared/info/620451841" target="_blank">
         <div class="resource-icon ri-blue">
           <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </div>
         <div class="resource-title">Malleus Anki Addon</div>
         <p class="resource-desc">Search and create Malleus cards directly from within Anki. Addon code: 620451841.</p>
-        <div class="resource-arrow">Install ↗</div>
+        <div class="resource-arrow">Install &nearr;</div>
       </a>
 
-      <a class="resource-card" href="submission-guidelines.html">
+      <a class="resource-card reveal reveal-delay-4" href="submission-guidelines.html">
         <div class="resource-icon ri-blue">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </div>
         <div class="resource-title">Submission Guidelines</div>
         <p class="resource-desc">Everything you need to know about contributing cards, formatting, tagging, and quality standards.</p>
-        <div class="resource-arrow">Read ↗</div>
+        <div class="resource-arrow">Read &nearr;</div>
       </a>
 
-      <a class="resource-card" href="https://malleuscm.notion.site/about-project-malleus" target="_blank">
+      <a class="resource-card reveal reveal-delay-5" href="https://malleuscm.notion.site/about-project-malleus" target="_blank">
         <div class="resource-icon ri-slate">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <div class="resource-title">About the Project</div>
         <p class="resource-desc">Learn about the origin, mission and team behind Malleus Clinical Medicine.</p>
-        <div class="resource-arrow">Read ↗</div>
+        <div class="resource-arrow">Read &nearr;</div>
       </a>
 
-      <a class="resource-card" href="https://github.com/Sabicool/Malleus-Anki-Addon" target="_blank">
+      <a class="resource-card reveal reveal-delay-6" href="https://github.com/Sabicool/Malleus-Anki-Addon" target="_blank">
         <div class="resource-icon ri-slate">
           <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
         </div>
         <div class="resource-title">GitHub (Addon)</div>
         <p class="resource-desc">Source code for the Malleus Anki Addon. Open source under AGPL-3.0.</p>
-        <div class="resource-arrow">View ↗</div>
+        <div class="resource-arrow">View &nearr;</div>
       </a>
 
-      <a class="resource-card" href="https://discord.gg/4WqgJzjVyH" target="_blank">
+      <a class="resource-card reveal reveal-delay-7" href="https://discord.gg/4WqgJzjVyH" target="_blank">
         <div class="resource-icon ri-purple">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <div class="resource-title">Discord Community</div>
         <p class="resource-desc">Join the server for help, card discussions, resources, and deck update announcements.</p>
-        <div class="resource-arrow">Join ↗</div>
+        <div class="resource-arrow">Join &nearr;</div>
       </a>
 
-      <a class="resource-card" href="https://www.facebook.com/MalleusCM" target="_blank">
+      <a class="resource-card reveal reveal-delay-7" href="https://www.facebook.com/MalleusCM" target="_blank">
         <div class="resource-icon ri-slate">
           <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
         </div>
         <div class="resource-title">Facebook Page</div>
         <p class="resource-desc">Follow for announcements and community posts about the Malleus project.</p>
-        <div class="resource-arrow">Follow ↗</div>
+        <div class="resource-arrow">Follow &nearr;</div>
       </a>
     </div>
 
     <!-- Donate Banner -->
-    <div class="donate-banner">
+    <div class="donate-banner reveal">
       <div class="donate-text">
-        <h3>Support Malleus ♥</h3>
+        <h3>Support Malleus</h3>
         <p>Malleus is a not-for-profit project made by students, for students. Your donations help cover hosting and tooling costs so we can keep the deck growing.</p>
       </div>
       <a class="btn-donate-white" href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">
-        ♥ Donate via PayPal
+        Donate via PayPal
       </a>
     </div>
   </div>
@@ -1490,7 +1894,7 @@
         <span class="footer-name">Malleus</span>
       </a>
       <div class="footer-sep"></div>
-      <span class="footer-tagline">Clinical Medicine · AU/NZ · Open Source · Not for Profit</span>
+      <span class="footer-tagline">Clinical Medicine &middot; AU/NZ &middot; Open Source &middot; Not for Profit</span>
     </div>
     <div class="footer-links">
       <a href="getting-started.html">Getting Started</a>
@@ -1498,9 +1902,124 @@
       <a href="register.html">Register</a>
       <a href="https://discord.gg/4WqgJzjVyH" target="_blank">Discord</a>
       <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate</a>
-      <a href="/cdn-cgi/l/email-protection#d5a5a7b0a6bcb1b0bba195b8b4b9b9b0a0a6fbbaa7b2fbb4a0">Contact</a>
+      <a href="https://malleuscm.notion.site/about-project-malleus" target="_blank" rel="noopener">Contact</a>
     </div>
   </div>
 </footer>
+
+<script>
+// Scroll-triggered reveal animation via IntersectionObserver
+(function() {
+  var els = document.querySelectorAll('.reveal');
+  if (!els.length) return;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  els.forEach(function(el) { observer.observe(el); });
+})();
+</script>
+
+<script>
+// ─── CARD TOUR: phone scrollytelling ─────────────────────────────────────────
+// Each .tour-step has a data-scroll="X" attribute (0–100) controlling how far
+// down the screenshot to scroll when that step is active.
+// To adjust positioning: edit the data-scroll values in the HTML above.
+(function() {
+  var IMG_ASPECT = 6078 / 1080;
+
+  var section    = document.getElementById('card-tour');
+  var screenClip = document.getElementById('phone-screen-clip');
+  var screenshot = document.getElementById('anki-screenshot');
+  var stepEls    = Array.prototype.slice.call(document.querySelectorAll('#card-tour .tour-step'));
+
+  if (!section || !screenshot || !stepEls.length) return;
+
+  // Read scroll targets from data-scroll attributes
+  var scrollTargets = stepEls.map(function(el) {
+    return parseFloat(el.dataset.scroll || '0') / 100;
+  });
+
+  function getMaxScroll() {
+    var clipH = screenClip.offsetHeight;
+    var imgH  = screenClip.offsetWidth * IMG_ASPECT;
+    return Math.max(0, imgH - clipH);
+  }
+
+  // ── Find which step is closest to viewport center ──────────────────────────
+  // Uses scroll position (not IntersectionObserver) for reliable bidirectional tracking.
+  var lastActiveIndex = -1;
+  var ticking = false;
+
+  function findActiveStep() {
+    var vpCenter = window.innerHeight / 2;
+    var bestIdx = 0;
+    var bestDist = Infinity;
+
+    for (var i = 0; i < stepEls.length; i++) {
+      var rect = stepEls[i].getBoundingClientRect();
+      var stepCenter = rect.top + rect.height / 2;
+      var dist = Math.abs(stepCenter - vpCenter);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+
+    // Only activate if the best step is reasonably close to the viewport
+    var bestRect = stepEls[bestIdx].getBoundingClientRect();
+    if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) return;
+
+    if (bestIdx === lastActiveIndex) return;
+    lastActiveIndex = bestIdx;
+
+    // Update step classes
+    stepEls.forEach(function(el, i) {
+      el.classList.toggle('active', i === bestIdx);
+    });
+
+    // Scroll screenshot with smooth transition
+    var pct = scrollTargets[bestIdx];
+    var translateY = -(pct * getMaxScroll());
+    screenshot.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+    screenshot.style.transform = 'translateY(' + translateY + 'px)';
+  }
+
+  function onScroll() {
+    if (ticking || window.innerWidth <= 800) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      findActiveStep();
+      ticking = false;
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', function() {
+    lastActiveIndex = -1;
+    onScroll();
+  }, { passive: true });
+
+  // Run once on load
+  findActiveStep();
+
+  // Mobile: clear state
+  var mq = window.matchMedia('(max-width: 800px)');
+  function handleMQ(e) {
+    if (e.matches) {
+      stepEls.forEach(function(el) { el.classList.remove('active'); });
+      screenshot.style.transform = '';
+      screenshot.style.transition = '';
+      lastActiveIndex = -1;
+    }
+  }
+  if (mq.addEventListener) mq.addEventListener('change', handleMQ);
+  handleMQ(mq);
+})();
+</script>
 </body>
 </html>

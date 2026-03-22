@@ -10,13 +10,24 @@ Outputs: index.html, getting-started.html, submission-guidelines.html,
 
 Config
 ------
-Set NOTION_TOKEN and FORM_URL below, or via environment variables:
+Copy .env.example to .env and fill in your values:
+    cp .env.example .env
+Or pass via environment variables:
     NOTION_TOKEN=ntn_... python3 build.py
 """
 
 import os, re, json, textwrap, requests, shutil
 from pathlib import Path
 from html import escape
+
+# ── Load .env file (if present) ──────────────────────────────────────────────
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ──────────────────────────────────────────────────────────────────
 NOTION_TOKEN = os.getenv("NOTION_TOKEN", "")
@@ -977,7 +988,7 @@ def main():
     else:
         logo_name = ""
         print("  ⚠️  No logo file found. Place logo.png next to build.py.")
-    for asset in ("addon.png",):
+    for asset in ("addon.png", "phone-transparent.png", "anki-screenshot.jpg"):
         src = Path(asset)
         if src.exists():
             shutil.copy(src, DIST_DIR / src.name)
