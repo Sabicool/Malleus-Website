@@ -1339,7 +1339,7 @@
         top: 64px;
         display: flex;
         justify-content: center;
-        background: var(--bg);   /* solid — mask-image on steps handles the fade */
+        background: var(--bg);   /* solid bg hides step cards that scroll behind the phone */
         padding: 0.75rem 0 0;
         pointer-events: none;
       }
@@ -1349,17 +1349,24 @@
         pointer-events: auto;
       }
 
-      /* Steps overlap the phone bottom by ~50px then fade in via mask.
-         260px phone ≈ 519px tall + 12px top padding = ~531px phone-sticky. */
+      /* Steps start below the phone (padding-top clears the phone height).
+         Phone = 64px nav + 12px padding + 260px frame = 336px bottom.
+         Each step card sticks just below that, giving real reading dwell time. */
       .tour-steps {
         align-self: start;
-        padding-top: 480px;
+        padding-top: 360px;
         z-index: 1;
-        -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 450px, black 560px);
-        mask-image:         linear-gradient(to bottom, transparent 0, transparent 450px, black 560px);
       }
-      .tour-step   { min-height: 60vh; padding: 0.75rem 0; }
-      .tour-step-inner { opacity: 0.35; transform: translateY(8px); padding: 1.25rem 1rem; }
+      /* Each step zone is tall enough to comfortably read + scroll through */
+      .tour-step   { min-height: 100vh; padding: 0.75rem 0; align-items: flex-start; }
+      /* Card pins just below the phone while you scroll through its zone */
+      .tour-step-inner {
+        position: sticky;
+        top: 352px;   /* 64px nav + 12px padding + 260px phone + 16px gap */
+        opacity: 0.45;
+        transform: none;
+        padding: 1.25rem 1rem;
+      }
       .tour-step-inner::after { transform: scaleY(0); }
       .tour-step-num   { font-size: 0.68rem; }
       .tour-step-title { font-size: 1.05rem; }
