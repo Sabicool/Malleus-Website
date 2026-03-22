@@ -1359,6 +1359,8 @@
       }
       /* Each step zone gives scroll dwell time; display:block for reliable layout */
       .tour-step   { display: block; min-height: 100vh; padding: 0.75rem 0; }
+      /* Last step gets extra dwell time so it stays visible longer before fade-out */
+      .tour-step:last-child { min-height: 140vh; }
       /* All cards hidden by default on mobile */
       .tour-step-inner {
         opacity: 0 !important;   /* !important overrides base .tour-step.active rule */
@@ -1378,7 +1380,7 @@
         transform: translateY(8px);
       }
       #card-tour.tour-visible .tour-step.active .tour-step-inner {
-        opacity: 1 !important;
+        opacity: var(--tour-fade, 1) !important;
         transform: translateY(0);
       }
       .tour-step-inner::after { transform: scaleY(0); }
@@ -1998,17 +2000,30 @@
     }
 
     if (isMobile) {
-      // Toggle .tour-visible — CSS uses this to make cards position:fixed below phone
-      var secRect = section.getBoundingClientRect();
-      var sectionOnScreen = secRect.bottom > 150 && secRect.top < window.innerHeight - 150;
-      section.classList.toggle('tour-visible', sectionOnScreen);
       updateCardTop();  // recalc card position from phone bottom
 
-      // Always update active class on mobile whenever section is visible.
-      // The step containers may not be in the viewport yet (they start 360px+
-      // header height into the layout) but we still need a step marked active
-      // so the CSS opacity:1 rule fires on the pinned card.
-      if (sectionOnScreen && bestIdx !== lastActiveIndex) {
+      // Use step container positions (not section) for tighter boundary control.
+      // Cards should only appear when we're actually scrolling through step zones,
+      // NOT when the section header is barely entering or the section footer is leaving.
+      var psRect = phoneSticky ? phoneSticky.getBoundingClientRect() : { top: 999, bottom: 600 };
+      var phoneBottom = psRect.bottom;
+      var phoneStuck = psRect.top <= 100;  // phone must be stuck at top of viewport
+      var firstStepTop = stepEls[0].getBoundingClientRect().top;
+      var lastStepBottom = stepEls[stepEls.length - 1].getBoundingClientRect().bottom;
+
+      // Cards only show when: phone is stuck AND we're within the step scroll zone.
+      // Exit earlier (150px buffer) so the card fades before the next section appears.
+      var exitBuffer = 150;
+      var inStepZone = phoneStuck && firstStepTop < (phoneBottom + 150) && lastStepBottom > (phoneBottom + exitBuffer);
+      section.classList.toggle('tour-visible', inStepZone);
+
+      // Smooth fade-out as we approach the exit boundary
+      var fadeZone = 250;  // px over which the card fades from 1 → 0
+      var distToExit = lastStepBottom - (phoneBottom + exitBuffer);
+      var fadeOpacity = inStepZone ? Math.min(1, Math.max(0, distToExit / fadeZone)) : 0;
+      section.style.setProperty('--tour-fade', fadeOpacity);
+
+      if (inStepZone && bestIdx !== lastActiveIndex) {
         lastActiveIndex = bestIdx;
         stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
       }
