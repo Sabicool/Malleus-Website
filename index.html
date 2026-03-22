@@ -1322,18 +1322,45 @@
     }
 
     @media (max-width: 800px) {
-      /* Keep 2-col layout but shrink the phone so steps have room */
-      .tour-layout { grid-template-columns: 110px 1fr; gap: 1rem; }
-      .phone-wrap  { max-width: 110px; margin: 0; }
-      .tour-phone-sticky { position: sticky; top: 68px; }
-      .tour-step   { min-height: 55vh; padding: 0.75rem 0; }
-      /* Restore fade/accent animation on mobile */
-      .tour-step-inner { opacity: 0.35; transform: translateY(8px); padding: 1rem 0.85rem; }
+      /* Phone on top, steps below — both children share the same grid cell
+         so the phone rail stretches to full layout height, keeping sticky active
+         throughout the steps scroll. */
+      .tour-layout { grid-template-columns: 1fr; }
+      .tour-phone-rail,
+      .tour-steps   { grid-row: 1; grid-column: 1; }
+
+      .tour-phone-rail {
+        align-self: stretch;
+        pointer-events: none;   /* let touches pass through to steps */
+        z-index: 2;
+      }
+      .tour-phone-sticky {
+        position: sticky;
+        top: 64px;
+        display: flex;
+        justify-content: center;
+        background: var(--bg);  /* mask steps scrolling beneath */
+        padding: 0.75rem 0 1rem;
+        pointer-events: none;
+      }
+      .phone-wrap {
+        max-width: 160px;
+        margin: 0 auto;
+        pointer-events: auto;
+      }
+
+      /* Steps start below the phone (phone ~320px tall + padding) */
+      .tour-steps {
+        align-self: start;
+        padding-top: 340px;
+        z-index: 1;
+      }
+      .tour-step   { min-height: 60vh; padding: 0.75rem 0; }
+      .tour-step-inner { opacity: 0.35; transform: translateY(8px); padding: 1.25rem 1rem; }
       .tour-step-inner::after { transform: scaleY(0); }
-      /* Tighten text for narrow step column */
-      .tour-step-num   { font-size: 0.65rem; }
-      .tour-step-title { font-size: 1rem; }
-      .tour-step-desc  { font-size: 0.82rem; line-height: 1.6; }
+      .tour-step-num   { font-size: 0.68rem; }
+      .tour-step-title { font-size: 1.05rem; }
+      .tour-step-desc  { font-size: 0.85rem; line-height: 1.65; }
       .resources-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -1919,7 +1946,11 @@
   var ticking = false;
 
   function findActiveStep() {
-    var vpCenter = window.innerHeight / 2;
+    // On mobile the phone occupies the top ~340px, so shift the activation
+    // point into the visible steps area below it.
+    var vpCenter = window.innerWidth <= 800
+      ? window.innerHeight * 0.75
+      : window.innerHeight / 2;
     var bestIdx = 0;
     var bestDist = Infinity;
 
