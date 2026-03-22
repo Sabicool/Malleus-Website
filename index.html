@@ -668,7 +668,7 @@
 
     .features-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 1rem;
     }
 
@@ -689,42 +689,7 @@
 
     .feature-card:active { transform: translateY(0) scale(0.995); }
 
-    /* Featured card: spans full width with horizontal layout */
-    .feature-card.featured {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 1.5rem;
-      align-items: start;
-      background: linear-gradient(135deg, var(--accent-light) 0%, rgba(212, 229, 245, 0.3) 50%, var(--bg) 100%);
-      border-color: rgba(122, 175, 212, 0.3);
-    }
 
-    .feature-card.featured .feature-icon {
-      margin-bottom: 0;
-      width: 48px;
-      height: 48px;
-    }
-
-    .feature-card.featured::after {
-      content: "Featured";
-      position: absolute;
-      top: 1.25rem; right: 1.25rem;
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
-      font-weight: 500;
-      color: var(--accent);
-      background: var(--surface);
-      border: 1px solid var(--accent-mid);
-      padding: 0.15rem 0.55rem;
-      border-radius: 2rem;
-      text-transform: uppercase;
-    }
-
-    /* Last card spans full width for visual balance */
-    .feature-card:last-child {
-      grid-column: 1 / -1;
-    }
 
     .feature-icon {
       width: 44px;
@@ -1350,10 +1315,6 @@
       .hero-inner, .addon-layout, .howto-layout { grid-template-columns: 1fr; gap: 2.5rem; }
       .addon-layout { direction: ltr; }
       .features-grid { grid-template-columns: 1fr 1fr; }
-      .feature-card.featured {
-        grid-column: 1 / -1;
-        grid-template-columns: auto 1fr;
-      }
       .howto-aside { position: static; }
 
       .donate-banner { flex-direction: column; text-align: center; align-items: center; padding: 2.5rem 2rem; }
@@ -1376,8 +1337,6 @@
       .hero { padding: 90px 1.25rem 60px; }
       .nav-links { display: none; }
       .features-grid { grid-template-columns: 1fr; }
-      .feature-card.featured { grid-template-columns: 1fr; grid-column: 1; }
-      .feature-card:last-child { grid-column: 1; }
       .resources-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
       .donate-banner { padding: 2rem 1.5rem; }
@@ -1568,15 +1527,13 @@
     </div>
 
     <div class="features-grid">
-      <div class="feature-card featured reveal reveal-delay-1">
+      <div class="feature-card reveal reveal-delay-1">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </div>
-        <div>
-          <div class="feature-title">Anki Addon</div>
-          <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging &mdash; all without leaving Anki.</p>
-          <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) &nearr;</a>
-        </div>
+        <div class="feature-title">Anki Addon</div>
+        <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging &mdash; all without leaving Anki.</p>
+        <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) &nearr;</a>
       </div>
 
       <div class="feature-card reveal reveal-delay-2">
