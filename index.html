@@ -1357,16 +1357,23 @@
         padding-top: 360px;
         z-index: 1;
       }
-      /* Each step zone is tall enough to comfortably read + scroll through.
-         display:block (not flex) is required — sticky on a flex child is unreliable. */
+      /* Each step zone gives scroll dwell time; display:block for reliable layout */
       .tour-step   { display: block; min-height: 100vh; padding: 0.75rem 0; }
-      /* Card pins just below the phone while you scroll through its zone */
+      /* Cards are invisible by default on mobile — JS pins the active one as fixed */
       .tour-step-inner {
-        position: sticky;
-        top: 352px;   /* 64px nav + 12px padding + 260px phone + 16px gap */
-        opacity: 0.45;
-        transform: none;
+        opacity: 0;
+        transform: translateY(8px);
         padding: 1.25rem 1rem;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      /* JS adds this class to the active card */
+      .tour-step-inner.mobile-pinned {
+        position: fixed;
+        top: 356px;   /* 64px nav + 12px padding + 260px phone + 20px gap */
+        z-index: 50;
+        opacity: 1;
+        transform: translateY(0);
+        /* left/right set inline by JS to match section padding */
       }
       .tour-step-inner::after { transform: scaleY(0); }
       .tour-step-num   { font-size: 0.68rem; }
@@ -1956,6 +1963,35 @@
   var lastActiveIndex = -1;
   var ticking = false;
 
+  // ── Mobile: pin the active card at a fixed position below the phone ─────────
+  function updateMobilePin(activeIdx) {
+    if (window.innerWidth > 800) return;
+
+    // Get left/right offsets from the steps column so card width matches layout
+    var stepsEl = section.querySelector('.tour-steps');
+    var sr = stepsEl ? stepsEl.getBoundingClientRect() : null;
+    var cardLeft  = sr ? Math.round(sr.left)  : 16;
+    var cardRight = sr ? Math.round(window.innerWidth - sr.right) : 16;
+
+    // Determine if the section is currently in view
+    var secRect = section.getBoundingClientRect();
+    var inView = secRect.bottom > 150 && secRect.top < window.innerHeight - 150;
+
+    stepEls.forEach(function(el, i) {
+      var inner = el.querySelector('.tour-step-inner');
+      if (!inner) return;
+      if (inView && i === activeIdx) {
+        inner.classList.add('mobile-pinned');
+        inner.style.left  = cardLeft  + 'px';
+        inner.style.right = cardRight + 'px';
+      } else {
+        inner.classList.remove('mobile-pinned');
+        inner.style.left  = '';
+        inner.style.right = '';
+      }
+    });
+  }
+
   function findActiveStep() {
     // On mobile the phone occupies the top ~340px, so shift the activation
     // point into the visible steps area below it.
@@ -1977,15 +2013,21 @@
 
     // Only activate if the best step is reasonably close to the viewport
     var bestRect = stepEls[bestIdx].getBoundingClientRect();
-    if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) return;
-
-    if (bestIdx === lastActiveIndex) return;
-    lastActiveIndex = bestIdx;
+    if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) {
+      updateMobilePin(-1); // section out of view — unpin everything
+      return;
+    }
 
     // Update step classes
     stepEls.forEach(function(el, i) {
       el.classList.toggle('active', i === bestIdx);
     });
+
+    // Pin card on mobile / scroll screenshot
+    if (bestIdx !== lastActiveIndex) {
+      lastActiveIndex = bestIdx;
+      updateMobilePin(bestIdx);
+    }
 
     // Scroll screenshot with smooth transition
     var pct = scrollTargets[bestIdx];
@@ -2006,6 +2048,7 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', function() {
     lastActiveIndex = -1;
+    updateMobilePin(-1); // clear any pinned card before recalculating
     onScroll();
   }, { passive: true });
 
