@@ -1370,7 +1370,7 @@
          Cards become fixed below the phone; only the active one is visible. */
       #card-tour.tour-visible .tour-step-inner {
         position: fixed;
-        top: 356px;   /* 64px nav + 12px padding + 260px phone + 20px gap */
+        top: var(--card-top, 610px);   /* JS sets this from phone bottom + gap */
         left: 2.5rem;
         right: 2.5rem;
         z-index: 30;
@@ -1956,6 +1956,18 @@
 
   if (!section || !screenshot || !stepEls.length) return;
 
+  // Compute card position from the phone's actual rendered bottom.
+  // Only sets --card-top once the phone is stuck (top ≈ 64px); before that
+  // the CSS fallback (610px) is used so we never set a huge wrong value.
+  var phoneSticky = section.querySelector('.tour-phone-sticky');
+  function updateCardTop() {
+    if (window.innerWidth > 800 || !phoneSticky) return;
+    var psRect = phoneSticky.getBoundingClientRect();
+    if (psRect.top > 100) return;  // phone not stuck yet — skip
+    section.style.setProperty('--card-top', Math.round(psRect.bottom + 12) + 'px');
+  }
+  window.addEventListener('resize', updateCardTop, { passive: true });
+
   // Read scroll targets from data-scroll attributes
   var scrollTargets = stepEls.map(function(el) {
     return parseFloat(el.dataset.scroll || '0') / 100;
@@ -1990,6 +2002,7 @@
       var secRect = section.getBoundingClientRect();
       var sectionOnScreen = secRect.bottom > 150 && secRect.top < window.innerHeight - 150;
       section.classList.toggle('tour-visible', sectionOnScreen);
+      updateCardTop();  // recalc card position from phone bottom
 
       // Always update active class on mobile whenever section is visible.
       // The step containers may not be in the viewport yet (they start 360px+
