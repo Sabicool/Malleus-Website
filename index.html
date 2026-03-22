@@ -668,7 +668,7 @@
 
     .features-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 1rem;
     }
 
@@ -1350,10 +1350,6 @@
       .hero-inner, .addon-layout, .howto-layout { grid-template-columns: 1fr; gap: 2.5rem; }
       .addon-layout { direction: ltr; }
       .features-grid { grid-template-columns: 1fr 1fr; }
-      .feature-card.featured {
-        grid-column: 1 / -1;
-        grid-template-columns: auto 1fr;
-      }
       .howto-aside { position: static; }
 
       .donate-banner { flex-direction: column; text-align: center; align-items: center; padding: 2.5rem 2rem; }
@@ -1568,15 +1564,13 @@
     </div>
 
     <div class="features-grid">
-      <div class="feature-card featured reveal reveal-delay-1">
+      <div class="feature-card reveal reveal-delay-1">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </div>
-        <div>
-          <div class="feature-title">Anki Addon</div>
-          <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging &mdash; all without leaving Anki.</p>
-          <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) &nearr;</a>
-        </div>
+        <div class="feature-title">Anki Addon</div>
+        <p class="feature-desc">A dedicated Anki addon integrates with the Malleus Notion database. Search cards, find existing notes with matching tags, and create new cards with proper tagging &mdash; all without leaving Anki.</p>
+        <a class="feature-link" href="https://ankiweb.net/shared/info/620451841" target="_blank">Install Addon (620451841) &nearr;</a>
       </div>
 
       <div class="feature-card reveal reveal-delay-2">
