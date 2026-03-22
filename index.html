@@ -1973,42 +1973,43 @@
   var ticking = false;
 
   function findActiveStep() {
-    // On mobile the phone occupies the top ~340px, so shift the activation
-    // point into the visible steps area below it.
-    var vpCenter = window.innerWidth <= 800
-      ? window.innerHeight * 0.75
-      : window.innerHeight / 2;
+    var isMobile = window.innerWidth <= 800;
+    var vpCenter = isMobile ? window.innerHeight * 0.75 : window.innerHeight / 2;
+
     var bestIdx = 0;
     var bestDist = Infinity;
-
     for (var i = 0; i < stepEls.length; i++) {
       var rect = stepEls[i].getBoundingClientRect();
       var stepCenter = rect.top + rect.height / 2;
       var dist = Math.abs(stepCenter - vpCenter);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = i;
-      }
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     }
 
-    // Toggle .tour-visible so CSS can pin cards as position:fixed below phone
-    if (window.innerWidth <= 800) {
+    if (isMobile) {
+      // Toggle .tour-visible — CSS uses this to make cards position:fixed below phone
       var secRect = section.getBoundingClientRect();
       var sectionOnScreen = secRect.bottom > 150 && secRect.top < window.innerHeight - 150;
       section.classList.toggle('tour-visible', sectionOnScreen);
+
+      // Always update active class on mobile whenever section is visible.
+      // The step containers may not be in the viewport yet (they start 360px+
+      // header height into the layout) but we still need a step marked active
+      // so the CSS opacity:1 rule fires on the pinned card.
+      if (sectionOnScreen && bestIdx !== lastActiveIndex) {
+        lastActiveIndex = bestIdx;
+        stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
+      }
     }
 
-    // Only activate if the best step is reasonably close to the viewport
+    // Skip screenshot scroll (and desktop active update) if step is off-screen
     var bestRect = stepEls[bestIdx].getBoundingClientRect();
     if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) return;
 
-    if (bestIdx === lastActiveIndex) return;
-    lastActiveIndex = bestIdx;
-
-    // Update step classes
-    stepEls.forEach(function(el, i) {
-      el.classList.toggle('active', i === bestIdx);
-    });
+    if (!isMobile) {
+      if (bestIdx === lastActiveIndex) return;
+      lastActiveIndex = bestIdx;
+      stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
+    }
 
     // Scroll screenshot with smooth transition
     var pct = scrollTargets[bestIdx];
