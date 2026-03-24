@@ -549,7 +549,7 @@
     .tour-steps { display: flex; flex-direction: column; }
 
     .tour-step {
-      min-height: auto;
+      min-height: 45vh;
       display: flex;
       align-items: center;
       padding: 2rem 0;
@@ -1321,20 +1321,59 @@
     }
 
     @media (max-width: 800px) {
-      /* Simple single-column stack: phone above, cards below. No overlap trick needed. */
-      .tour-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+      /* Phone on top, steps below — both share the same grid cell so the phone
+         rail is as tall as the steps column, keeping position:sticky active. */
+      .tour-layout { grid-template-columns: 1fr; }
+      .tour-phone-rail,
+      .tour-steps   { grid-row: 1; grid-column: 1; }
+
+      .tour-phone-rail {
+        align-self: stretch;
+        pointer-events: none;
+        z-index: 2;
+      }
       .tour-phone-sticky {
+        position: sticky;
+        top: 64px;
         display: flex;
         justify-content: center;
+        background: var(--bg);
         padding: 0.75rem 0 0;
+        pointer-events: none;
       }
       .phone-wrap {
         max-width: 260px;
         margin: 0 auto;
+        pointer-events: auto;
       }
-      .tour-steps { padding-top: 0; }
-      .tour-step   { display: block; min-height: auto; padding: 0.75rem 0; }
-      .tour-step-inner { padding: 1.25rem 1rem; }
+
+      .tour-steps {
+        align-self: start;
+        padding-top: 360px;
+        z-index: 1;
+      }
+      .tour-step   { display: block; min-height: 70vh; padding: 0.75rem 0; }
+      /* All cards hidden; JS adds .tour-visible when section is being scrolled */
+      .tour-step-inner {
+        opacity: 0 !important;
+        transform: translateY(8px);
+        padding: 1.25rem 1rem;
+        transition: opacity 0.45s ease, transform 0.45s ease;
+      }
+      #card-tour.tour-visible .tour-step-inner {
+        position: fixed;
+        top: var(--card-top, 610px);
+        left: 2.5rem;
+        right: 2.5rem;
+        z-index: 30;
+        opacity: 0 !important;
+        transform: translateY(8px);
+      }
+      #card-tour.tour-visible .tour-step.active .tour-step-inner {
+        opacity: 1 !important;
+        transform: translateY(0);
+      }
+      .tour-step-inner::after { transform: scaleY(0); }
       .tour-step-num   { font-size: 0.68rem; }
       .tour-step-title { font-size: 1.05rem; }
       .tour-step-desc  { font-size: 0.85rem; line-height: 1.65; }
@@ -1342,6 +1381,7 @@
     }
 
     @media (max-width: 600px) {
+      #card-tour.tour-visible .tour-step-inner { left: 1.25rem; right: 1.25rem; }
 
       section { padding: 5rem 1.25rem; }
       nav { padding: 0 1.25rem; }
@@ -1893,10 +1933,9 @@
 </script>
 
 <script>
-// ─── CARD TOUR: phone screenshot animation ────────────────────────────────────
-// Each .tour-step has a data-scroll="X" attribute (0–100) controlling how far
-// down the screenshot to scroll when that step is active.
-// Cards scroll normally with the page; the closest one to the viewport centre is highlighted.
+// ─── CARD TOUR: phone scrollytelling ─────────────────────────────────────────
+// Screenshot position is interpolated continuously from scroll position so the
+// phone tracks the user's scroll rather than jumping between discrete targets.
 (function() {
   var IMG_ASPECT = 6078 / 1080;
 
@@ -1907,47 +1946,86 @@
 
   if (!section || !screenshot || !stepEls.length) return;
 
+  var phoneSticky = section.querySelector('.tour-phone-sticky');
+
+  function updateCardTop() {
+    if (window.innerWidth > 800 || !phoneSticky) return;
+    var r = phoneSticky.getBoundingClientRect();
+    if (r.top > 100) return;
+    section.style.setProperty('--card-top', Math.round(r.bottom + 12) + 'px');
+  }
+  window.addEventListener('resize', updateCardTop, { passive: true });
+
   var scrollTargets = stepEls.map(function(el) {
     return parseFloat(el.dataset.scroll || '0') / 100;
   });
 
   function getMaxScroll() {
-    var clipH = screenClip.offsetHeight;
-    var imgH  = screenClip.offsetWidth * IMG_ASPECT;
-    return Math.max(0, imgH - clipH);
+    return Math.max(0, screenClip.offsetWidth * IMG_ASPECT - screenClip.offsetHeight);
   }
 
-  // ── Find which step is closest to viewport center ──────────────────────────
-  // Uses scroll position (not IntersectionObserver) for reliable bidirectional tracking.
+  // Interpolate screenshot pct smoothly between step targets based on scroll.
+  // As viewport centre moves from step A's centre toward step B's centre,
+  // the pct linearly tracks from A's target to B's target — no discrete jump.
+  function getInterpolatedPct(vpCenter) {
+    var prevIdx = 0;
+    for (var i = 0; i < stepEls.length; i++) {
+      var r = stepEls[i].getBoundingClientRect();
+      if (r.top + r.height / 2 <= vpCenter) prevIdx = i;
+    }
+    var nextIdx = Math.min(prevIdx + 1, stepEls.length - 1);
+    if (prevIdx === nextIdx) return scrollTargets[prevIdx];
+
+    var prevCenter = (function() { var r = stepEls[prevIdx].getBoundingClientRect(); return r.top + r.height / 2; })();
+    var nextCenter = (function() { var r = stepEls[nextIdx].getBoundingClientRect(); return r.top + r.height / 2; })();
+    var t = Math.max(0, Math.min(1, (vpCenter - prevCenter) / (nextCenter - prevCenter)));
+    // Ease the interpolation so it lingers near each step's target
+    t = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return scrollTargets[prevIdx] + t * (scrollTargets[nextIdx] - scrollTargets[prevIdx]);
+  }
+
   var lastActiveIndex = -1;
   var ticking = false;
 
   function findActiveStep() {
+    var isMobile = window.innerWidth <= 800;
     var vpCenter = window.innerHeight / 2;
 
-    var bestIdx = 0;
-    var bestDist = Infinity;
+    // Nearest step to viewport centre = active
+    var bestIdx = 0, bestDist = Infinity;
     for (var i = 0; i < stepEls.length; i++) {
-      var rect = stepEls[i].getBoundingClientRect();
-      var stepCenter = rect.top + rect.height / 2;
-      var dist = Math.abs(stepCenter - vpCenter);
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+      var r = stepEls[i].getBoundingClientRect();
+      var d = Math.abs(r.top + r.height / 2 - vpCenter);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
     }
 
-    // Skip if best step is off-screen
+    if (isMobile) {
+      updateCardTop();
+      var psRect = phoneSticky ? phoneSticky.getBoundingClientRect() : { top: 999, bottom: 600 };
+      var phoneStuck = psRect.top <= 100;
+      var firstTop  = stepEls[0].getBoundingClientRect().top;
+      var lastBot   = stepEls[stepEls.length - 1].getBoundingClientRect().bottom;
+      var inZone    = phoneStuck && firstTop < psRect.bottom + 150 && lastBot > psRect.bottom + 100;
+      section.classList.toggle('tour-visible', inZone);
+
+      if (inZone && bestIdx !== lastActiveIndex) {
+        lastActiveIndex = bestIdx;
+        stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
+      }
+    }
+
     var bestRect = stepEls[bestIdx].getBoundingClientRect();
     if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) return;
 
-    if (bestIdx !== lastActiveIndex) {
+    if (!isMobile && bestIdx !== lastActiveIndex) {
       lastActiveIndex = bestIdx;
       stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
     }
 
-    // Animate screenshot position
-    var pct = scrollTargets[bestIdx];
-    var translateY = -(pct * getMaxScroll());
-    screenshot.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-    screenshot.style.transform = 'translateY(' + translateY + 'px)';
+    // Continuously interpolated screenshot position — no CSS transition needed
+    var pct = getInterpolatedPct(vpCenter);
+    screenshot.style.transition = 'none';
+    screenshot.style.transform  = 'translateY(' + (-(pct * getMaxScroll())) + 'px)';
   }
 
   function onScroll() {
@@ -1957,9 +2035,12 @@
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function() { lastActiveIndex = -1; onScroll(); }, { passive: true });
+  window.addEventListener('resize', function() {
+    lastActiveIndex = -1;
+    section.classList.remove('tour-visible');
+    onScroll();
+  }, { passive: true });
 
-  // Run once on load
   findActiveStep();
 })();
 </script>
