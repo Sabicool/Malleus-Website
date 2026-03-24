@@ -549,10 +549,10 @@
     .tour-steps { display: flex; flex-direction: column; }
 
     .tour-step {
-      min-height: 60vh;
+      min-height: auto;
       display: flex;
       align-items: center;
-      padding: 1.5rem 0;
+      padding: 2rem 0;
     }
 
     .tour-step-inner {
@@ -1310,7 +1310,6 @@
     @media (max-width: 1000px) {
       .tour-layout { gap: 2.5rem; }
       .phone-wrap  { max-width: 100%; }
-      .tour-step   { min-height: 50vh; }
       .tour-step-inner::before { display: none; }
       .hero-inner, .addon-layout, .howto-layout { grid-template-columns: 1fr; gap: 2.5rem; }
       .addon-layout { direction: ltr; }
@@ -1322,68 +1321,20 @@
     }
 
     @media (max-width: 800px) {
-      /* Phone on top, steps below — both children share the same grid cell
-         so the phone rail stretches to full layout height, keeping sticky active
-         throughout the steps scroll. */
-      .tour-layout { grid-template-columns: 1fr; }
-      .tour-phone-rail,
-      .tour-steps   { grid-row: 1; grid-column: 1; }
-
-      .tour-phone-rail {
-        align-self: stretch;
-        pointer-events: none;
-        z-index: 2;
-      }
+      /* Simple single-column stack: phone above, cards below. No overlap trick needed. */
+      .tour-layout { grid-template-columns: 1fr; gap: 1.5rem; }
       .tour-phone-sticky {
-        position: sticky;
-        top: 64px;
         display: flex;
         justify-content: center;
-        background: var(--bg);   /* solid bg hides step cards that scroll behind the phone */
         padding: 0.75rem 0 0;
-        pointer-events: none;
       }
       .phone-wrap {
         max-width: 260px;
         margin: 0 auto;
-        pointer-events: auto;
       }
-
-      /* Steps start below the phone (padding-top clears the phone height).
-         Phone = 64px nav + 12px padding + 260px frame = 336px bottom.
-         Each step card sticks just below that, giving real reading dwell time. */
-      .tour-steps {
-        align-self: start;
-        padding-top: 360px;
-        z-index: 1;
-      }
-      /* Each step zone gives scroll dwell time; display:block for reliable layout */
-      .tour-step   { display: block; min-height: 100vh; padding: 0.75rem 0; }
-      /* Last step gets extra dwell time so it stays visible longer before fade-out */
-      .tour-step:last-child { min-height: 140vh; }
-      /* All cards hidden by default on mobile */
-      .tour-step-inner {
-        opacity: 0 !important;   /* !important overrides base .tour-step.active rule */
-        transform: translateY(8px);
-        padding: 1.25rem 1rem;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-      }
-      /* JS adds .tour-visible to #card-tour while section is on screen.
-         Cards become fixed below the phone; only the active one is visible. */
-      #card-tour.tour-visible .tour-step-inner {
-        position: fixed;
-        top: var(--card-top, 610px);   /* JS sets this from phone bottom + gap */
-        left: 2.5rem;
-        right: 2.5rem;
-        z-index: 30;
-        opacity: 0 !important;
-        transform: translateY(8px);
-      }
-      #card-tour.tour-visible .tour-step.active .tour-step-inner {
-        opacity: var(--tour-fade, 1) !important;
-        transform: translateY(0);
-      }
-      .tour-step-inner::after { transform: scaleY(0); }
+      .tour-steps { padding-top: 0; }
+      .tour-step   { display: block; min-height: auto; padding: 0.75rem 0; }
+      .tour-step-inner { padding: 1.25rem 1rem; }
       .tour-step-num   { font-size: 0.68rem; }
       .tour-step-title { font-size: 1.05rem; }
       .tour-step-desc  { font-size: 0.85rem; line-height: 1.65; }
@@ -1391,8 +1342,6 @@
     }
 
     @media (max-width: 600px) {
-      /* Match narrower section padding for pinned cards */
-      #card-tour.tour-visible .tour-step-inner { left: 1.25rem; right: 1.25rem; }
 
       section { padding: 5rem 1.25rem; }
       nav { padding: 0 1.25rem; }
@@ -1944,10 +1893,10 @@
 </script>
 
 <script>
-// ─── CARD TOUR: phone scrollytelling ─────────────────────────────────────────
+// ─── CARD TOUR: phone screenshot animation ────────────────────────────────────
 // Each .tour-step has a data-scroll="X" attribute (0–100) controlling how far
 // down the screenshot to scroll when that step is active.
-// To adjust positioning: edit the data-scroll values in the HTML above.
+// Cards scroll normally with the page; the closest one to the viewport centre is highlighted.
 (function() {
   var IMG_ASPECT = 6078 / 1080;
 
@@ -1958,19 +1907,6 @@
 
   if (!section || !screenshot || !stepEls.length) return;
 
-  // Compute card position from the phone's actual rendered bottom.
-  // Only sets --card-top once the phone is stuck (top ≈ 64px); before that
-  // the CSS fallback (610px) is used so we never set a huge wrong value.
-  var phoneSticky = section.querySelector('.tour-phone-sticky');
-  function updateCardTop() {
-    if (window.innerWidth > 800 || !phoneSticky) return;
-    var psRect = phoneSticky.getBoundingClientRect();
-    if (psRect.top > 100) return;  // phone not stuck yet — skip
-    section.style.setProperty('--card-top', Math.round(psRect.bottom + 12) + 'px');
-  }
-  window.addEventListener('resize', updateCardTop, { passive: true });
-
-  // Read scroll targets from data-scroll attributes
   var scrollTargets = stepEls.map(function(el) {
     return parseFloat(el.dataset.scroll || '0') / 100;
   });
@@ -1987,8 +1923,7 @@
   var ticking = false;
 
   function findActiveStep() {
-    var isMobile = window.innerWidth <= 800;
-    var vpCenter = isMobile ? window.innerHeight * 0.75 : window.innerHeight / 2;
+    var vpCenter = window.innerHeight / 2;
 
     var bestIdx = 0;
     var bestDist = Infinity;
@@ -1999,47 +1934,16 @@
       if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     }
 
-    if (isMobile) {
-      updateCardTop();  // recalc card position from phone bottom
-
-      // Use step container positions (not section) for tighter boundary control.
-      // Cards should only appear when we're actually scrolling through step zones,
-      // NOT when the section header is barely entering or the section footer is leaving.
-      var psRect = phoneSticky ? phoneSticky.getBoundingClientRect() : { top: 999, bottom: 600 };
-      var phoneBottom = psRect.bottom;
-      var phoneStuck = psRect.top <= 100;  // phone must be stuck at top of viewport
-      var firstStepTop = stepEls[0].getBoundingClientRect().top;
-      var lastStepBottom = stepEls[stepEls.length - 1].getBoundingClientRect().bottom;
-
-      // Cards only show when: phone is stuck AND we're within the step scroll zone.
-      // Exit earlier (150px buffer) so the card fades before the next section appears.
-      var exitBuffer = 150;
-      var inStepZone = phoneStuck && firstStepTop < (phoneBottom + 150) && lastStepBottom > (phoneBottom + exitBuffer);
-      section.classList.toggle('tour-visible', inStepZone);
-
-      // Smooth fade-out as we approach the exit boundary
-      var fadeZone = 250;  // px over which the card fades from 1 → 0
-      var distToExit = lastStepBottom - (phoneBottom + exitBuffer);
-      var fadeOpacity = inStepZone ? Math.min(1, Math.max(0, distToExit / fadeZone)) : 0;
-      section.style.setProperty('--tour-fade', fadeOpacity);
-
-      if (inStepZone && bestIdx !== lastActiveIndex) {
-        lastActiveIndex = bestIdx;
-        stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
-      }
-    }
-
-    // Skip screenshot scroll (and desktop active update) if step is off-screen
+    // Skip if best step is off-screen
     var bestRect = stepEls[bestIdx].getBoundingClientRect();
     if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) return;
 
-    if (!isMobile) {
-      if (bestIdx === lastActiveIndex) return;
+    if (bestIdx !== lastActiveIndex) {
       lastActiveIndex = bestIdx;
       stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
     }
 
-    // Scroll screenshot with smooth transition
+    // Animate screenshot position
     var pct = scrollTargets[bestIdx];
     var translateY = -(pct * getMaxScroll());
     screenshot.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -2049,18 +1953,11 @@
   function onScroll() {
     if (ticking) return;
     ticking = true;
-    requestAnimationFrame(function() {
-      findActiveStep();
-      ticking = false;
-    });
+    requestAnimationFrame(function() { findActiveStep(); ticking = false; });
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function() {
-    lastActiveIndex = -1;
-    section.classList.remove('tour-visible');
-    onScroll();
-  }, { passive: true });
+  window.addEventListener('resize', function() { lastActiveIndex = -1; onScroll(); }, { passive: true });
 
   // Run once on load
   findActiveStep();
