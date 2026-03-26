@@ -1349,7 +1349,9 @@
 
       .tour-steps {
         align-self: start;
-        padding-top: 360px;
+        /* 40vh = trigger(75%) − half-step(35%) so step 1's centre lands exactly on
+           the trigger when the phone sticks, giving all cards equal 70vh dwell time. */
+        padding-top: 40vh;
         z-index: 1;
       }
       .tour-step   { display: block; min-height: 70vh; padding: 0.75rem 0; }
@@ -1989,7 +1991,10 @@
 
   function findActiveStep() {
     var isMobile = window.innerWidth <= 800;
-    var vpCenter = window.innerHeight / 2;
+    // On mobile the phone occupies the top ~70% of the viewport; cards render below it.
+    // Using 75% as the trigger aligns step activation with where the card is actually read,
+    // giving uniform dwell time across all steps.
+    var vpCenter = isMobile ? window.innerHeight * 0.75 : window.innerHeight / 2;
 
     // Nearest step to viewport centre = active
     var bestIdx = 0, bestDist = Infinity;
