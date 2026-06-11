@@ -181,9 +181,17 @@ def fetch_database_as_table(db_id: str, title: str = "") -> str:
 
 def _slugify(text: str) -> str:
     import re as _re
+    from html import unescape as _unescape
     text = _re.sub(r'<[^>]+>', '', text)
+    text = _unescape(text)  # &#x27; etc. would otherwise leak "x27" into the slug
     text = _re.sub(r'[^\w\s-]', '', text.lower())
     return _re.sub(r'[\s_-]+', '-', text).strip('-')
+
+
+def _youtube_embed(url: str) -> str:
+    """Return the YouTube embed URL for a watch/share link, or '' if not YouTube."""
+    m = re.search(r'(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/|live/))([\w-]{6,})', url)
+    return f"https://www.youtube.com/embed/{m.group(1)}" if m else ""
 
 
 def add_ids_and_build_toc(content_html: str) -> tuple[str, str]:
@@ -353,6 +361,43 @@ def blocks_to_html(blocks: list, depth: int = 0) -> str:
                 url = localise_image(url, b.get("id", "img"))
             cap  = rich_text_to_html(data.get("caption", []))
             html.append(f'<figure class="notion-image"><img src="{escape(url)}" alt="{escape(cap)}" loading="lazy"><figcaption>{cap}</figcaption></figure>')
+
+        elif btype == "video":
+            vd  = data.get("external", {}) or data.get("file", {})
+            url = vd.get("url", "")
+            cap = rich_text_to_html(data.get("caption", []))
+            yt  = _youtube_embed(url)
+            if yt:
+                cap_html = f"<figcaption>{cap}</figcaption>" if cap else ""
+                html.append(
+                    f'<figure class="notion-video-figure">'
+                    f'<div class="notion-video"><iframe src="{escape(yt)}" title="Video" '
+                    f'allow="accelerometer; clipboard-write; encrypted-media; gyroscope; '
+                    f'picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" '
+                    f'allowfullscreen loading="lazy"></iframe></div>{cap_html}</figure>')
+            elif url:
+                local = localise_image(url, b.get("id", "video"))
+                if local.startswith("assets/"):
+                    html.append(f'<video class="notion-video-file" controls preload="metadata" src="{escape(local)}"></video>')
+                else:
+                    html.append(f'<p class="notion-bookmark">▶ <a href="{escape(url)}" target="_blank">Watch video</a></p>')
+
+        elif btype == "file":
+            fd   = data.get("external", {}) or data.get("file", {})
+            url  = fd.get("url", "")
+            name = data.get("name", "") or "Download file"
+            cap  = rich_text_to_html(data.get("caption", []))
+            if url:
+                local = localise_image(url, b.get("id", "file"))
+                cap_html = f' <span class="notion-file-caption">— {cap}</span>' if cap else ""
+                html.append(f'<p class="notion-file">📎 <a href="{escape(local)}" download>{escape(name)}</a>{cap_html}</p>')
+
+        elif btype in ("bookmark", "embed", "link_preview"):
+            url = data.get("url", "")
+            cap = rich_text_to_html(data.get("caption", []))
+            if url:
+                label = cap or escape(url)
+                html.append(f'<p class="notion-bookmark">🔗 <a href="{escape(url)}" target="_blank">{label}</a></p>')
 
         elif btype == "toggle":
             text = rich_text_to_html(data.get("rich_text", []))
@@ -573,8 +618,21 @@ code { background:#E8EFF5; color:var(--accent-dark); padding:0.1em 0.35em;
 .notion-quote { border-left:3px solid var(--accent); padding:0.5rem 1.25rem;
   margin:1.25rem 0; color:var(--ink-muted); font-style:italic; }
 .notion-image { margin:1.5rem 0; }
-.notion-image img { max-width:100%; border-radius:8px; border:1px solid var(--border); }
-.notion-image figcaption { font-size:0.8rem; color:var(--ink-faint); margin-top:0.4rem; }
+.notion-image img { max-width:100%; max-height:460px; width:auto; height:auto;
+  display:block; margin:0 auto; border-radius:8px; border:1px solid var(--border); }
+.notion-image figcaption { font-size:0.8rem; color:var(--ink-faint); margin-top:0.4rem;
+  text-align:center; }
+.notion-video-figure { margin:1.5rem 0; }
+.notion-video { position:relative; aspect-ratio:16/9; overflow:hidden;
+  max-width:720px; margin:0 auto; border-radius:8px; border:1px solid var(--border);
+  background:#000; }
+.notion-video-figure figcaption { font-size:0.8rem; color:var(--ink-faint);
+  margin-top:0.4rem; text-align:center; }
+.notion-video iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
+.notion-video-file { display:block; max-width:720px; width:100%; margin:1.5rem auto;
+  border-radius:8px; border:1px solid var(--border); }
+.notion-file, .notion-bookmark { margin-bottom:1rem; }
+.notion-file-caption { color:var(--ink-faint); font-size:0.85em; }
 .notion-toggle { border:1px solid var(--border); border-radius:6px;
   padding:0.75rem 1rem; margin:0.5rem 0; }
 .notion-toggle summary { cursor:pointer; font-weight:500; color:var(--ink); list-style:none; }
