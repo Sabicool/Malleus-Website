@@ -48,6 +48,36 @@ NOTION_HEADERS = {
     "Content-Type":   "application/json",
 }
 
+SITE_URL   = "https://sabicool.github.io/Malleus-Website/"
+ASSETS_DIR = DIST_DIR / "assets"
+
+
+def localise_image(url: str, block_id: str) -> str:
+    """Download a Notion-hosted image into dist/assets/ and return its relative
+    path. Notion file URLs are presigned S3 links that expire after one hour,
+    so they must not be embedded in the generated HTML directly. Non-expiring
+    (external) URLs are returned unchanged; on download failure the original
+    URL is kept so the build never breaks."""
+    if "amazonaws.com" not in url and "X-Amz-" not in url:
+        return url
+    from urllib.parse import urlparse
+    ext = os.path.splitext(urlparse(url).path)[1].lower()
+    if not ext or len(ext) > 5:
+        ext = ".png"
+    fname = f"{block_id.replace('-', '')}{ext}"
+    dest  = ASSETS_DIR / fname
+    if not dest.exists():
+        try:
+            ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+            r = requests.get(url, timeout=30)
+            r.raise_for_status()
+            dest.write_bytes(r.content)
+            print(f"    🖼️  Downloaded image → assets/{fname}")
+        except Exception as e:
+            print(f"    ⚠️  Image download failed for block {block_id}: {e}")
+            return url
+    return f"assets/{fname}"
+
 # ── Notion → HTML ────────────────────────────────────────────────────────────
 
 def rich_text_to_html(rich_texts: list) -> str:
@@ -206,10 +236,10 @@ def add_ids_and_build_toc(content_html: str) -> tuple[str, str]:
     ]
     toc_html = (
         '<div class="toc-panel">'
-        '<div class="toc-tab">'
+        '<button type="button" class="toc-tab" aria-expanded="false" aria-label="Table of contents">'
         '<span class="toc-tab-icon">&#8801;</span>'
         '<span class="toc-tab-label">Contents</span>'
-        '</div>'
+        '</button>'
         '<nav class="toc"><div class="toc-inner">'
         '<div class="toc-header"><span class="toc-title">On this page</span></div>'
         f'<ul>{"".join(items_html)}</ul>'
@@ -319,6 +349,8 @@ def blocks_to_html(blocks: list, depth: int = 0) -> str:
         elif btype == "image":
             img_data = data.get("file", {}) or data.get("external", {})
             url  = img_data.get("url", "")
+            if url:
+                url = localise_image(url, b.get("id", "img"))
             cap  = rich_text_to_html(data.get("caption", []))
             html.append(f'<figure class="notion-image"><img src="{escape(url)}" alt="{escape(cap)}" loading="lazy"><figcaption>{cap}</figcaption></figure>')
 
@@ -439,40 +471,56 @@ SHARED_CSS = """
   --ink: #1A2B3C; --ink-muted: #4A6080; --ink-faint: #96AABF;
   --accent: #2E6DA4; --accent-light: #D4E5F5; --accent-mid: #7AAFD4;
   --accent-dark: #1B4E7A; --border: #C8DBE8; --border-light: #DDE8F0;
-  --radius: 4px;
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 18px; --radius-xl: 24px;
+  --shadow-sm: 0 1px 3px rgba(27, 78, 122, 0.06);
+  --shadow-md: 0 4px 20px rgba(27, 78, 122, 0.08);
+  --shadow-lg: 0 12px 40px rgba(27, 78, 122, 0.1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 html { scroll-behavior: smooth; }
-body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--ink);
+body { font-family: "Outfit", sans-serif; background: var(--bg); color: var(--ink);
   line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+/* GRAIN OVERLAY (matches homepage) */
+body::after { content: ""; position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat; background-size: 256px 256px; }
 
 /* NAV */
 nav { position: fixed; top:0; left:0; right:0; z-index:100;
-  background: rgba(240,244,248,0.9); backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
-  padding: 0 2rem; height: 62px; display:flex; align-items:center;
+  background: rgba(240,244,248,0.82); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid rgba(200,219,232,0.6);
+  padding: 0 2.5rem; height: 64px; display:flex; align-items:center;
   justify-content:space-between; }
-.nav-logo { display:flex; align-items:center; gap:0.6rem; text-decoration:none; color:var(--ink); }
-.nav-logo img { width:32px; height:32px; border-radius:50%; object-fit:cover; }
-.nav-logo-text { font-family:"Lora",serif; font-weight:600; font-size:1rem; }
-.nav-links { display:flex; align-items:center; gap:1.75rem; list-style:none; }
+.nav-logo { display:flex; align-items:center; gap:0.65rem; text-decoration:none; color:var(--ink); }
+.nav-logo img { width:34px; height:34px; border-radius:50%; object-fit:cover; }
+.nav-logo-text { font-family:"Lora",serif; font-weight:600; font-size:1.1rem; letter-spacing:-0.02em; }
+.nav-links { display:flex; align-items:center; gap:0.35rem; list-style:none; }
 .nav-links a { text-decoration:none; color:var(--ink-muted); font-size:0.875rem;
-  transition:color 0.2s; }
-.nav-links a:hover, .nav-links a.active { color:var(--accent); }
+  padding:0.4rem 0.75rem; border-radius:var(--radius-sm);
+  transition:color 0.25s var(--ease-out), background 0.25s var(--ease-out); }
+.nav-links a:hover, .nav-links a.active { color:var(--accent);
+  background:rgba(46,109,164,0.06); }
 .nav-cta { background:var(--accent) !important; color:white !important;
-  padding:0.42rem 1rem; border-radius:var(--radius); font-weight:500 !important; }
+  padding:0.45rem 1.1rem !important; border-radius:var(--radius-sm) !important;
+  font-weight:500 !important; }
 .nav-cta:hover { background:var(--accent-dark) !important; }
 .nav-hamburger { display:none; background:none; border:none; cursor:pointer; color:var(--ink); padding:0.4rem; font-size:1.4rem; line-height:1; }
 @media (max-width:700px) {
   .nav-hamburger { display:flex; align-items:center; }
-  .nav-links { display:none; position:absolute; top:62px; left:0; right:0; flex-direction:column; background:rgba(240,244,248,0.97); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0.25rem 1.5rem 0.75rem; gap:0; z-index:99; }
+  .nav-links { display:none; position:absolute; top:64px; left:0; right:0; flex-direction:column; align-items:stretch; background:rgba(240,244,248,0.97); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-bottom:1px solid var(--border); padding:0.25rem 1.5rem 0.75rem; gap:0; z-index:99; }
   .nav-links.mobile-open { display:flex; }
   .nav-links li { border-bottom:1px solid var(--border-light); }
   .nav-links li:last-child { border-bottom:none; }
-  .nav-links a { padding:0.8rem 0; font-size:0.95rem; display:block; }
+  .nav-links a { padding:0.8rem 0; font-size:0.95rem; display:block; border-radius:0; }
+  .nav-links a:hover, .nav-links a.active { background:transparent; }
+  .nav-links .nav-cta { display:inline-block; margin:0.6rem 0; padding:0.5rem 1.1rem !important; border-radius:var(--radius-sm) !important; }
 }
 
 /* PAGE SHELL */
-.page-body { padding-top: 62px; }
+.page-body { padding-top: 64px; }
 .page-header { background: var(--surface); border-bottom: 1px solid var(--border);
   padding: 4rem 2rem 3rem; }
 .page-header-inner { max-width: 780px; margin: 0 auto; }
@@ -549,9 +597,10 @@ code { background:#E8EFF5; color:var(--accent-dark); padding:0.1em 0.35em;
   font-size:0.9rem; color:var(--ink-muted); }
 .notion-child-page-inline { margin:1.5rem 0; }
 
-/* TOC — fixed hover panel on the left */
+/* TOC — fixed panel on the left (hover or tap/click to open; pinned on very wide screens) */
 .toc-panel { position:fixed; left:0; top:110px; z-index:50; display:flex; align-items:flex-start; }
-.toc-tab { width:32px; min-height:140px; padding:1rem 0; background:var(--surface); border:1px solid var(--border); border-left:none; border-radius:0 10px 10px 0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.6rem; flex-shrink:0; cursor:default; transition:background 0.2s, border-color 0.2s, border-radius 0.3s; box-shadow:2px 0 8px rgba(46,109,164,0.07); }
+.toc-tab { width:32px; min-height:140px; padding:1rem 0; background:var(--surface); border:1px solid var(--border); border-left:none; border-radius:0 10px 10px 0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.6rem; flex-shrink:0; cursor:pointer; font-family:inherit; transition:background 0.2s, border-color 0.2s, border-radius 0.3s; box-shadow:2px 0 8px rgba(46,109,164,0.07); }
+.toc-tab:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .toc-panel:hover .toc-tab { background:var(--bg); border-color:var(--accent-mid); border-radius:0; }
 .toc-tab-icon { font-size:1rem; color:var(--accent); line-height:1; }
 .toc-tab-label { writing-mode:vertical-rl; font-size:0.58rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint); transform:rotate(180deg); white-space:nowrap; }
@@ -571,6 +620,12 @@ code { background:#E8EFF5; color:var(--accent-dark); padding:0.1em 0.35em;
 .toc li.toc-h2 > a { padding-left:1.25rem; font-size:0.8rem; color:var(--ink-faint); }
 .toc li.toc-h2 > a:hover { color:var(--accent); background:var(--accent-light); border-left-color:var(--accent-mid); }
 @media (max-width:900px) { .toc-panel { display:none; } }
+/* Very wide screens: pin the TOC open as a permanent sidebar */
+@media (min-width:1700px) {
+  .toc-panel .toc-tab { display:none; }
+  .toc { width:288px !important; height:auto !important; opacity:1 !important; }
+  .toc-inner { width:288px; height:auto; max-height:calc(100vh - 150px); }
+}
 a { color:var(--accent); }
 
 /* FORM */
@@ -581,7 +636,7 @@ a { color:var(--accent); }
   color:var(--ink); margin-bottom:0.4rem; }
 .form-label .req { color:var(--accent); margin-left:0.15rem; }
 .form-input, .form-select { width:100%; padding:0.65rem 0.9rem;
-  border:1px solid var(--border); border-radius:var(--radius);
+  border:1px solid var(--border); border-radius:var(--radius-sm);
   background:var(--bg); font-family:inherit; font-size:0.93rem;
   color:var(--ink); transition:border-color 0.2s, box-shadow 0.2s;
   -webkit-appearance:none; }
@@ -601,7 +656,7 @@ a { color:var(--accent); }
 .form-hint { font-size:0.78rem; color:var(--ink-faint); margin-top:0.3rem; line-height:1.5; }
 .btn-submit { display:inline-flex; align-items:center; gap:0.4rem;
   background:var(--accent); color:white; border:none; cursor:pointer;
-  padding:0.75rem 2rem; border-radius:var(--radius); font-family:inherit;
+  padding:0.75rem 2rem; border-radius:var(--radius-sm); font-family:inherit;
   font-size:0.95rem; font-weight:500; transition:background 0.2s, transform 0.15s; }
 .btn-submit:hover { background:var(--accent-dark); transform:translateY(-1px); }
 .btn-submit:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
@@ -612,6 +667,33 @@ a { color:var(--accent); }
 .form-error { display:none; background:#FDEDEC; border:1px solid #E74C3C;
   border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; font-size:0.87rem;
   color:#922B21; }
+
+/* SPONSORS */
+.sponsors-list { display:flex; flex-direction:column; gap:1.5rem; max-width:760px; }
+.sponsor-card { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:2.5rem; }
+.sponsor-tier { display:inline-block; font-size:0.7rem; font-weight:500;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--accent);
+  background:var(--accent-light); padding:0.25rem 0.75rem; border-radius:2rem;
+  margin-bottom:1.4rem; }
+.sponsor-logo { display:block; max-width:280px; max-height:72px; width:100%;
+  object-fit:contain; object-position:left; margin-bottom:1.4rem; }
+.sponsor-desc { color:var(--ink-muted); font-size:0.95rem; line-height:1.75;
+  margin-bottom:0.9rem; }
+.sponsor-thanks { color:var(--ink-faint); font-size:0.85rem; font-style:italic;
+  margin-bottom:1.4rem; }
+.btn-sponsor { display:inline-flex; align-items:center; gap:0.4rem;
+  background:var(--accent); color:#fff !important; text-decoration:none;
+  padding:0.6rem 1.4rem; border-radius:var(--radius-sm); font-size:0.9rem;
+  font-weight:500; transition:background 0.2s; }
+.btn-sponsor:hover { background:var(--accent-dark); }
+.sponsor-invite { background:var(--accent-light); border:1px solid var(--accent-mid);
+  border-radius:var(--radius-lg); padding:2rem 2.5rem; max-width:760px; margin-top:2rem; }
+.sponsor-invite h3 { font-family:"Lora",serif; font-size:1.25rem; color:var(--ink);
+  margin-bottom:0.5rem; }
+.sponsor-invite p { color:var(--ink-muted); font-size:0.92rem; line-height:1.7;
+  margin-bottom:1.1rem; }
+@media (max-width:640px) { .sponsor-card, .sponsor-invite { padding:1.75rem 1.5rem; } }
 
 /* FOOTER */
 footer { padding:2rem; border-top:1px solid var(--border); background:var(--surface); }
@@ -627,7 +709,10 @@ footer { padding:2rem; border-top:1px solid var(--border); background:var(--surf
 .footer-links a:hover { color:var(--accent); }
 """
 
-FONTS = '<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">'
+FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
+         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+         '<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400'
+         '&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">')
 
 FORM_JS = """
 function setFieldError(el, msg) {
@@ -748,17 +833,20 @@ document.addEventListener('DOMContentLoaded', () => {
 # ── Template helpers ──────────────────────────────────────────────────────────
 
 def nav_html(logo_name: str, active: str = "") -> str:
+    # One nav for the whole site — index.html and register.html mirror this manually
     pages = [
-        ("index.html",                "Home"),
-        ("getting-started.html",      "Getting Started"),
-        ("submission-guidelines.html","Submission Guidelines"),
-        ("checklist.html",            "Checklist"),
-        ("register.html",             "Register"),
+        ("index.html",                 "Home",            "home"),
+        ("getting-started.html",       "Getting Started", "getting-started"),
+        ("submission-guidelines.html", "Submit Cards",    "submission-guidelines"),
+        ("checklist.html",             "Checklist",       "checklist"),
+        ("sponsors.html",              "Sponsors",        "sponsors"),
     ]
     items = []
-    for href, label in pages:
-        cls = ' class="active"' if label.lower().replace(" ","-") == active else ""
+    for href, label, key in pages:
+        cls = ' class="active"' if key == active else ""
         items.append(f'<li><a href="{href}"{cls}>{label}</a></li>')
+    reg_cls = "nav-cta active" if active == "register" else "nav-cta"
+    items.append(f'<li><a href="register.html" class="{reg_cls}">Register</a></li>')
     img = f'<img src="{logo_name}" alt="Malleus">' if logo_name else ""
     return f"""
 <nav>
@@ -782,23 +870,39 @@ def footer_html(logo_name: str) -> str:
       <span class="footer-tagline">· Clinical Medicine · AU/NZ · Open Source · Not for Profit</span>
     </div>
     <div class="footer-links">
+      <a href="sponsors.html">Sponsors</a>
       <a href="https://malleuscm.notion.site/" target="_blank">Notion</a>
       <a href="https://discord.gg/4WqgJzjVyH" target="_blank">Discord</a>
       <a href="https://www.facebook.com/MalleusCM" target="_blank">Facebook</a>
       <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate</a>
-      <a href="mailto:president@malleus.org.au">Contact</a>
+      <a href="https://malleuscm.notion.site/about-project-malleus" target="_blank" rel="noopener">Contact</a>
     </div>
   </div>
 </footer>"""
 
 
-def page_shell(title: str, logo_name: str, active: str, body: str, extra_js: str = "") -> str:
+def page_shell(title: str, logo_name: str, active: str, body: str,
+               extra_js: str = "", description: str = "") -> str:
+    description = description or (
+        "Malleus Clinical Medicine — the open-source, collaborative Anki flashcard "
+        "deck for Australian and New Zealand medical students and JMOs.")
+    page_url = f"{SITE_URL}{active}.html" if active else SITE_URL
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} — Malleus Clinical Medicine</title>
+  <meta name="description" content="{escape(description)}">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Malleus Clinical Medicine">
+  <meta property="og:title" content="{escape(title)} — Malleus Clinical Medicine">
+  <meta property="og:description" content="{escape(description)}">
+  <meta property="og:image" content="{SITE_URL}logo.png">
+  <meta property="og:url" content="{page_url}">
+  <meta name="twitter:card" content="summary">
   {FONTS}
   <style>{SHARED_CSS}</style>
 </head>
@@ -838,9 +942,29 @@ def build_notion_page(
     toc_js = ("""
 var _tocPanel = document.querySelector('.toc-panel');
 if (_tocPanel) {
-  var _tocNav = _tocPanel.querySelector('.toc');
-  _tocPanel.addEventListener('mouseenter', function() { _tocNav.style.height = (window.innerHeight - 125) + 'px'; _tocNav.style.width = '256px'; _tocNav.style.opacity = '1'; });
-  _tocPanel.addEventListener('mouseleave', function() { _tocNav.style.width = '0px'; _tocNav.style.height = '0px'; _tocNav.style.opacity = '0'; });
+  var _tocNav    = _tocPanel.querySelector('.toc');
+  var _tocTab    = _tocPanel.querySelector('.toc-tab');
+  var _tocPinned = window.matchMedia('(min-width: 1700px)');
+  var _tocOpen   = false;
+  function tocOpen() {
+    if (_tocPinned.matches) return;
+    _tocOpen = true;
+    _tocNav.style.height = (window.innerHeight - 125) + 'px';
+    _tocNav.style.width = '256px'; _tocNav.style.opacity = '1';
+    _tocTab.setAttribute('aria-expanded', 'true');
+  }
+  function tocClose() {
+    if (_tocPinned.matches) return;
+    _tocOpen = false;
+    _tocNav.style.width = '0px'; _tocNav.style.height = '0px'; _tocNav.style.opacity = '0';
+    _tocTab.setAttribute('aria-expanded', 'false');
+  }
+  _tocTab.addEventListener('click', function() { _tocOpen ? tocClose() : tocOpen(); });
+  if (window.matchMedia('(hover: hover)').matches) {
+    _tocPanel.addEventListener('mouseenter', tocOpen);
+    _tocPanel.addEventListener('mouseleave', tocClose);
+  }
+  _tocNav.addEventListener('click', function(e) { if (e.target.closest('a')) tocClose(); });
 }
 """ if toc_html else "")
 
@@ -855,7 +979,69 @@ if (_tocPanel) {
 <div class="page-content">
   {content_inner}
 </div>"""
-    return page_shell(title, logo_name, active, body, toc_js)
+    return page_shell(title, logo_name, active, body, toc_js, description=subtitle)
+
+
+# Sponsors shown on sponsors.html — logo files must sit next to build.py
+SPONSORS = [
+    {
+        "name":  "eMedici",
+        "logo":  "emedici.png",
+        "url":   "https://emedici.com",
+        "tier":  "Sponsor",
+        "blurb": "eMedici is an Australian clinical education platform built around "
+                 "thousands of case-based practice questions, used by medical students "
+                 "and junior doctors across Australia and New Zealand. Malleus cards are "
+                 "cross-linked to eMedici questions through our Question Bank tags, so "
+                 "you can practise a topic on eMedici and review the matching flashcards "
+                 "in Anki.",
+        "thanks": "We're grateful to eMedici for supporting Malleus and helping keep "
+                  "the project free for students.",
+    },
+]
+
+
+def build_sponsors_page(logo_name: str) -> str:
+    cards = ""
+    for s in SPONSORS:
+        cards += f"""
+    <div class="sponsor-card">
+      <span class="sponsor-tier">{escape(s["tier"])}</span>
+      <img class="sponsor-logo" src="{escape(s["logo"])}" alt="{escape(s["name"])} logo">
+      <p class="sponsor-desc">{escape(s["blurb"])}</p>
+      <p class="sponsor-thanks">{escape(s["thanks"])}</p>
+      <a class="btn-sponsor" href="{escape(s["url"])}" target="_blank" rel="noopener">Visit {escape(s["name"])} &rarr;</a>
+    </div>"""
+
+    body = f"""
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-eyebrow">Our Supporters</div>
+    <h1 class="page-title">Sponsors</h1>
+    <p class="page-subtitle">
+      Malleus is a not-for-profit, student-run project. Our sponsors help cover hosting
+      and tooling costs so the deck stays free for every medical student in Australia
+      and New Zealand.
+    </p>
+  </div>
+</div>
+<div class="page-content">
+  <div class="sponsors-list">{cards}
+  </div>
+
+  <div class="sponsor-invite">
+    <h3>Become a sponsor</h3>
+    <p>
+      If your organisation would like to support open-source medical education in
+      Australia and New Zealand, we'd love to hear from you. Sponsorship directly funds
+      hosting, tooling, and the volunteer-driven maintenance of the deck.
+    </p>
+    <a class="btn-sponsor" href="mailto:president@malleus.org.au">Get in Touch &rarr;</a>
+  </div>
+</div>"""
+    return page_shell("Sponsors", logo_name, "sponsors", body, description=(
+        "The sponsors who keep Malleus Clinical Medicine free for AU/NZ medical "
+        "students — and how your organisation can support the project."))
 
 
 def build_register_page(form_ids: dict, logo_name: str) -> str:
@@ -971,7 +1157,9 @@ def build_register_page(form_ids: dict, logo_name: str) -> str:
   </div>
 </div>"""
 
-    return page_shell("Register as a Member", logo_name, "register", body, js)
+    return page_shell("Register as a Member", logo_name, "register", body, js, description=(
+        "Register as a general member of Malleus Clinical Medicine — get community "
+        "updates, voting rights at AGMs, and a free @malleus.org.au email address."))
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -988,7 +1176,8 @@ def main():
     else:
         logo_name = ""
         print("  ⚠️  No logo file found. Place logo.png next to build.py.")
-    for asset in ("addon.png", "phone-transparent.png", "anki-screenshot.jpg"):
+    for asset in ("addon.png", "phone-transparent.png", "anki-screenshot.jpg",
+                  "emedici.png", "favicon.png", "apple-touch-icon.png"):
         src = Path(asset)
         if src.exists():
             shutil.copy(src, DIST_DIR / src.name)
@@ -1024,6 +1213,10 @@ def main():
         NOTION_PAGES["checklist"], "checklist", logo_name
     )
     (DIST_DIR / "checklist.html").write_text(html, encoding="utf-8")
+
+    print("📄  Generating Sponsors page…")
+    html = build_sponsors_page(logo_name)
+    (DIST_DIR / "sponsors.html").write_text(html, encoding="utf-8")
 
     print("📄  Copying register.html…")
     if Path("register.html").exists():

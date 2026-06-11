@@ -3,7 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Malleus Clinical Medicine</title>
+  <title>Malleus Clinical Medicine — Open-Source Anki Deck for AU/NZ Med Students</title>
+  <meta name="description" content="Malleus Clinical Medicine — the first student-run, open-source clinical medicine Anki deck for Australian and New Zealand medical students and JMOs. 8,000+ flashcards aligned to AU/NZ guidelines, free via AnkiHub." />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Malleus Clinical Medicine" />
+  <meta property="og:title" content="Malleus Clinical Medicine — Open-Source Anki Deck for AU/NZ Med Students" />
+  <meta property="og:description" content="The first student-run, open-source clinical medicine Anki deck for Australian and New Zealand medical students and JMOs. Free via AnkiHub." />
+  <meta property="og:image" content="https://sabicool.github.io/Malleus-Website/logo.png" />
+  <meta property="og:url" content="https://sabicool.github.io/Malleus-Website/" />
+  <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -153,6 +163,35 @@
     }
 
     .nav-cta:active { transform: scale(0.97); }
+
+    .nav-hamburger {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      color: var(--ink); padding: 0.4rem;
+      font-size: 1.4rem; line-height: 1;
+    }
+
+    @media (max-width: 700px) {
+      .nav-hamburger { display: flex; align-items: center; }
+      .nav-links {
+        display: none;
+        position: absolute; top: 64px; left: 0; right: 0;
+        flex-direction: column; align-items: stretch;
+        background: rgba(240, 244, 248, 0.97);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 0.25rem 1.5rem 0.75rem;
+        gap: 0; z-index: 99;
+        list-style: none;
+      }
+      .nav-links.mobile-open { display: flex; }
+      .nav-links li { border-bottom: 1px solid var(--border-light); }
+      .nav-links li:last-child { border-bottom: none; }
+      .nav-links a { padding: 0.8rem 0; font-size: 0.95rem; display: block; border-radius: 0; }
+      .nav-links a:hover { background: transparent; }
+      .nav-links .nav-cta { display: inline-block; margin: 0.6rem 0; padding: 0.5rem 1.1rem !important; border-radius: var(--radius-sm) !important; }
+    }
 
     /* ─── HERO ─── */
     .hero {
@@ -1218,6 +1257,64 @@
 
     .btn-donate-white:active { transform: scale(0.97); }
 
+    /* ─── SPONSORS STRIP ─── */
+    #sponsors-strip {
+      background: var(--surface);
+      border-top: 1px solid var(--border-light);
+      padding: 3rem 2.5rem;
+    }
+
+    .sponsors-strip-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2.75rem;
+      flex-wrap: wrap;
+    }
+
+    .sponsors-strip-label {
+      font-size: 0.73rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .sponsors-strip-logos {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .sponsors-strip-logos img {
+      height: 34px;
+      width: auto;
+      display: block;
+      filter: grayscale(1);
+      opacity: 0.65;
+      transition: filter 0.3s var(--ease-out), opacity 0.3s var(--ease-out);
+    }
+
+    .sponsors-strip-logos a:hover img {
+      filter: none;
+      opacity: 1;
+    }
+
+    .sponsors-strip-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: none;
+      transition: gap 0.3s var(--ease-spring);
+    }
+
+    .sponsors-strip-link:hover { gap: 0.5rem; }
+
     /* ─── FOOTER ─── */
     footer {
       padding: 2.75rem 2.5rem;
@@ -1386,7 +1483,6 @@
       section { padding: 5rem 1.25rem; }
       nav { padding: 0 1.25rem; }
       .hero { padding: 90px 1.25rem 60px; }
-      .nav-links { display: none; }
       .features-grid { grid-template-columns: 1fr; }
       .resources-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
@@ -1402,11 +1498,12 @@
     <img src="logo.png" alt="Malleus logo" />
     <span class="nav-logo-text">Malleus</span>
   </a>
-  <ul class="nav-links">
-    <li><a href="#features">Features</a></li>
-    <li><a href="#addon">Anki Addon</a></li>
+  <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">&#9776;</button>
+  <ul class="nav-links" id="nav-links">
     <li><a href="getting-started.html">Getting Started</a></li>
     <li><a href="submission-guidelines.html">Submit Cards</a></li>
+    <li><a href="checklist.html">Checklist</a></li>
+    <li><a href="sponsors.html">Sponsors</a></li>
     <li><a href="register.html" class="nav-cta">Register</a></li>
   </ul>
 </nav>
@@ -1893,6 +1990,19 @@
   </div>
 </section>
 
+<!-- SPONSORS STRIP -->
+<section id="sponsors-strip">
+  <div class="section-inner">
+    <div class="sponsors-strip-row reveal">
+      <div class="sponsors-strip-label">Proudly supported by</div>
+      <div class="sponsors-strip-logos">
+        <a href="sponsors.html" title="eMedici"><img src="emedici.png" alt="eMedici"></a>
+      </div>
+      <a class="sponsors-strip-link" href="sponsors.html">Our sponsors &rarr;</a>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
@@ -1907,6 +2017,7 @@
     <div class="footer-links">
       <a href="getting-started.html">Getting Started</a>
       <a href="submission-guidelines.html">Submit Cards</a>
+      <a href="sponsors.html">Sponsors</a>
       <a href="register.html">Register</a>
       <a href="https://discord.gg/4WqgJzjVyH" target="_blank">Discord</a>
       <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate</a>
@@ -1914,6 +2025,22 @@
     </div>
   </div>
 </footer>
+
+<script>
+// Mobile nav toggle
+function toggleMobileNav() {
+  var n = document.getElementById('nav-links');
+  if (n) n.classList.toggle('mobile-open');
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.nav-links a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      var n = document.getElementById('nav-links');
+      if (n) n.classList.remove('mobile-open');
+    });
+  });
+});
+</script>
 
 <script>
 // Scroll-triggered reveal animation via IntersectionObserver
