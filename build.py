@@ -1319,7 +1319,7 @@ ROLE_ORDER = [
 
 # Open positions whose title contains one of these (case-insensitive) are pinned
 # to the top of the jobs board, in this order; everything else follows by date.
-PINNED_JOBS = ("publications/promotions",)
+PINNED_JOBS = ("publications",)
 
 
 def build_jobs_page(logo_name: str) -> str:
