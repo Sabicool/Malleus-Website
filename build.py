@@ -734,6 +734,7 @@ a { color:var(--accent); }
   letter-spacing:0.1em; text-transform:uppercase; color:var(--accent);
   background:var(--accent-light); padding:0.25rem 0.75rem; border-radius:2rem;
   margin-bottom:1.4rem; }
+.sponsor-tier-gold { color:#8A6A15; background:#FBF1D5; border:1px solid #E8D193; }
 .sponsor-logo { display:block; max-width:280px; max-height:72px; width:100%;
   object-fit:contain; object-position:left; margin-bottom:1.4rem; }
 .sponsor-desc { color:var(--ink-muted); font-size:0.95rem; line-height:1.75;
@@ -1051,7 +1052,7 @@ SPONSORS = [
         "name":  "eMedici",
         "logo":  "emedici.png",
         "url":   "https://emedici.com",
-        "tier":  "Sponsor",
+        "tier":  "Gold Sponsor",
         "blurb": "eMedici is an Australian clinical education platform built around "
                  "thousands of case-based practice questions, used by medical students "
                  "and junior doctors across Australia and New Zealand. Malleus cards are "
@@ -1067,9 +1068,10 @@ SPONSORS = [
 def build_sponsors_page(logo_name: str) -> str:
     cards = ""
     for s in SPONSORS:
+        tier_cls = "sponsor-tier sponsor-tier-" + _slugify(s["tier"].split()[0])
         cards += f"""
     <div class="sponsor-card">
-      <span class="sponsor-tier">{escape(s["tier"])}</span>
+      <span class="{tier_cls}">{escape(s["tier"])}</span>
       <img class="sponsor-logo" src="{escape(s["logo"])}" alt="{escape(s["name"])} logo">
       <p class="sponsor-desc">{escape(s["blurb"])}</p>
       <p class="sponsor-thanks">{escape(s["thanks"])}</p>
