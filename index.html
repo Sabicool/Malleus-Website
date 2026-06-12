@@ -1376,7 +1376,7 @@
 
     /* ─── FOOTER ─── */
     footer {
-      padding: 2.75rem 2.5rem;
+      padding: 3rem 2.5rem 0;
       border-top: 1px solid var(--border-light);
       background: var(--surface);
     }
@@ -1385,11 +1385,14 @@
       max-width: 1140px;
       margin: 0 auto;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 2.5rem;
       flex-wrap: wrap;
+      padding-bottom: 2.25rem;
     }
+
+    .footer-brand { max-width: 240px; }
 
     .footer-logo {
       display: flex;
@@ -1397,6 +1400,7 @@
       gap: 0.6rem;
       text-decoration: none;
       color: var(--ink);
+      margin-bottom: 0.6rem;
     }
 
     .footer-logo img {
@@ -1412,43 +1416,59 @@
       font-size: 0.95rem;
     }
 
-    .footer-sep {
-      width: 1px;
-      height: 16px;
-      background: var(--border);
-      margin: 0 0.5rem;
+    .footer-tagline {
+      font-size: 0.77rem;
+      color: var(--ink-faint);
+      line-height: 1.6;
     }
 
-    .footer-tagline {
-      font-size: 0.79rem;
+    .footer-cols { display: flex; gap: 3rem; flex-wrap: wrap; }
+
+    .footer-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      min-width: 120px;
+    }
+
+    .footer-col-title {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.25rem;
+    }
+
+    .footer-col a {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+
+    .footer-col a:hover { color: var(--accent); }
+
+    .footer-bottom {
+      max-width: 1140px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border-light);
+      padding: 1rem 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem 1.5rem;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
       color: var(--ink-faint);
     }
 
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
-
-    .footer-links a {
-      font-size: 0.8rem;
-      color: var(--ink-muted);
-      text-decoration: none;
-      padding: 0.3rem 0.6rem;
-      border-radius: var(--radius-sm);
-      transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
-    }
-
-    .footer-links a:hover {
-      color: var(--accent);
-      background: rgba(46, 109, 164, 0.06);
-    }
+    .footer-bottom a { color: var(--ink-muted); text-decoration: none; }
+    .footer-bottom a:hover { color: var(--accent); }
 
     @media (max-width: 640px) {
-      footer { padding: 2rem 1.25rem; }
-      .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
-      .footer-links { flex-wrap: wrap; gap: 0.25rem; }
-      .footer-sep { display: none; }
+      footer { padding: 2.5rem 1.25rem 0; }
+      .footer-cols { gap: 2rem; }
     }
 
     /* ─── ANIMATIONS ─── */
@@ -1568,6 +1588,7 @@
     <li><a href="getting-started.html">Getting Started</a></li>
     <li><a href="submission-guidelines.html">Submit Cards</a></li>
     <li><a href="checklist.html">Checklist</a></li>
+    <li><a href="about.html">About</a></li>
     <li><a href="sponsors.html">Sponsors</a></li>
     <li><a href="register.html" class="nav-cta">Register</a></li>
   </ul>
@@ -2168,23 +2189,43 @@
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
-    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+    <div class="footer-brand">
       <a class="footer-logo" href="#">
         <img src="logo.png" alt="Malleus" />
         <span class="footer-name">Malleus</span>
       </a>
-      <div class="footer-sep"></div>
-      <span class="footer-tagline">Clinical Medicine &middot; AU/NZ &middot; Open Source &middot; Not for Profit</span>
+      <p class="footer-tagline">Clinical Medicine &middot; AU/NZ<br>Open Source &middot; Not for Profit</p>
     </div>
-    <div class="footer-links">
-      <a href="getting-started.html">Getting Started</a>
-      <a href="submission-guidelines.html">Submit Cards</a>
-      <a href="sponsors.html">Sponsors</a>
-      <a href="register.html">Register</a>
-      <a href="https://discord.gg/4WqgJzjVyH" target="_blank">Discord</a>
-      <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate</a>
-      <a href="https://malleuscm.notion.site/about-project-malleus" target="_blank" rel="noopener">Contact</a>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <span class="footer-col-title">Project</span>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="submission-guidelines.html">Submit Cards</a>
+        <a href="checklist.html">Checklist</a>
+        <a href="about.html">About Us</a>
+        <a href="sponsors.html">Sponsors</a>
+        <a href="https://malleuscm.notion.site/" target="_blank" rel="noopener">Notion Hub</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Community</span>
+        <a href="https://discord.gg/4WqgJzjVyH" target="_blank" rel="noopener">Discord</a>
+        <a href="https://www.facebook.com/MalleusCM" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://www.instagram.com/projectmalleus" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.youtube.com/@MalleusClinicalMedicine" target="_blank" rel="noopener">YouTube</a>
+        <a href="https://community.ankihub.net/tags/c/ankihub-decks/updates/31/updates-malleus-clinical-medicine-aunz-stapedius/2338" target="_blank" rel="noopener">Newsletter</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Get Involved</span>
+        <a href="register.html">Register</a>
+        <a href="jobs-board.html">Jobs Board</a>
+        <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank" rel="noopener">Donate</a>
+        <a href="mailto:admin@malleus.org.au">Contact</a>
+      </div>
     </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; Project Malleus. Volunteer run, not for profit.</span>
+    <a href="terms-of-use.html">Terms of Use</a>
   </div>
 </footer>
 

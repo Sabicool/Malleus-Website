@@ -40,7 +40,12 @@ NOTION_PAGES = {
     "getting-started":         "31d5964e68a4807ba315f7413b776b1a",
     "submission-guidelines":   "31d5964e68a480fea3e3f9eed0c43486",
     "checklist":               "31d5964e68a4804dbd60c509ddf513ac",
+    "terms-of-use":            "3785964e68a480fca4dbcb245ecda795",
 }
+
+# Databases queried at build time (must be shared with the Notion integration)
+JOBS_DB_ID     = "3405964e68a4807db351f96c76e93bf7"   # Project Malleus Positions
+CONTACTS_DB_ID = "2d75964e68a4810996cbed680205b5a5"   # Committee contacts (About page)
 
 NOTION_HEADERS = {
     "Authorization":  f"Bearer {NOTION_TOKEN}",
@@ -132,7 +137,7 @@ def fetch_database_as_table(db_id: str, title: str = "") -> str:
         r = requests.post(
             f"https://api.notion.com/v1/databases/{db_id}/query",
             headers=NOTION_HEADERS,
-            json={"page_size": 100, "sorts": [{"property": "", "direction": "ascending"}]}
+            json={"page_size": 100}
         )
         if r.status_code != 200:
             return f'<div class="notion-child-page">🗄️ {escape(title)}</div>'
@@ -177,6 +182,56 @@ def fetch_database_as_table(db_id: str, title: str = "") -> str:
         return f'{label}<div class="notion-table-wrap"><table class="notion-table"><tr>{headers_html}</tr>{rows_html}</table></div>'
     except Exception as e:
         return f'<div class="notion-child-page">🗄️ {escape(title)} (error: {escape(str(e))})</div>'
+
+
+def fetch_db_rows(db_id: str) -> list:
+    """Query all rows of a Notion database. Returns [] on any failure so the
+    build never breaks on a missing or unshared database."""
+    rows, cursor = [], None
+    try:
+        while True:
+            payload = {"page_size": 100}
+            if cursor:
+                payload["start_cursor"] = cursor
+            r = requests.post(f"https://api.notion.com/v1/databases/{db_id}/query",
+                              headers=NOTION_HEADERS, json=payload)
+            if r.status_code != 200:
+                print(f"    ⚠️  Database {db_id} query failed ({r.status_code}) — is it shared with the integration?")
+                return rows
+            data = r.json()
+            rows += data.get("results", [])
+            if not data.get("has_more"):
+                break
+            cursor = data.get("next_cursor")
+    except Exception as e:
+        print(f"    ⚠️  Database {db_id} query error: {e}")
+    return rows
+
+
+def _prop(row: dict, name: str, kind: str):
+    """Extract a plain value from a Notion page property."""
+    v = row.get("properties", {}).get(name, {}).get(kind)
+    if kind in ("title", "rich_text"):
+        return "".join(rt.get("plain_text", "") for rt in (v or []))
+    if kind == "select":
+        return (v or {}).get("name", "")
+    if kind == "multi_select":
+        return [o.get("name", "") for o in (v or [])]
+    if kind == "date":
+        return (v or {}).get("start", "")
+    return v or ""
+
+
+def _fmt_date(iso: str) -> str:
+    """ISO date → '26 Apr 2026' (empty-safe)."""
+    if not iso:
+        return ""
+    try:
+        from datetime import date
+        d = date.fromisoformat(iso[:10])
+        return f"{d.day} {d.strftime('%b %Y')}"
+    except Exception:
+        return iso
 
 
 def _slugify(text: str) -> str:
@@ -810,22 +865,86 @@ a { color:var(--accent); }
   margin-bottom:1.1rem; }
 @media (max-width:640px) { .sponsor-card, .sponsor-invite { padding:1.75rem 1.5rem; } }
 
+/* JOBS BOARD */
+.job-card { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:1.75rem; margin-bottom:1.25rem; max-width:820px; }
+.job-head { display:flex; justify-content:space-between; align-items:center;
+  gap:1rem; flex-wrap:wrap; }
+.job-title { font-family:"Lora",serif; font-size:1.25rem; font-weight:600;
+  color:var(--ink); margin:0; }
+.job-status { font-size:0.68rem; font-weight:500; letter-spacing:0.1em;
+  text-transform:uppercase; padding:0.22rem 0.7rem; border-radius:2rem;
+  background:#EAFAF1; color:#1A6B35; border:1px solid #9CD7B4; }
+.job-meta { font-size:0.8rem; color:var(--ink-faint); margin:0.4rem 0 0.9rem; }
+.job-desc { color:var(--ink-muted); font-size:0.93rem; line-height:1.7; }
+.job-req { font-size:0.88rem; color:var(--ink-muted); background:var(--bg);
+  border:1px solid var(--border-light); border-radius:var(--radius);
+  padding:0.8rem 1rem; margin:0.9rem 0; line-height:1.65; }
+.job-actions { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;
+  margin-top:1rem; }
+.job-rules { font-size:0.82rem; }
+.jobs-empty { background:var(--surface); border:1px dashed var(--border);
+  border-radius:var(--radius-lg); padding:2rem; max-width:820px;
+  color:var(--ink-muted); font-size:0.95rem; }
+
+/* ABOUT */
+.about-prose { max-width:760px; color:var(--ink-muted); font-size:0.97rem;
+  line-height:1.75; }
+.about-prose p { margin-bottom:1rem; }
+.about-prose strong { color:var(--ink); }
+.about-h { font-family:"Lora",serif; font-size:1.7rem; font-weight:600;
+  color:var(--ink); margin:2.5rem 0 1rem; letter-spacing:-0.01em; }
+.about-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;
+  max-width:760px; margin:2rem 0; }
+.about-stat { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:1.4rem 1rem; text-align:center; }
+.about-stat-value { font-family:"Lora",serif; font-size:1.7rem; font-weight:600;
+  color:var(--accent); line-height:1.15; }
+.about-stat-label { font-size:0.78rem; color:var(--ink-muted); margin-top:0.25rem; }
+@media (max-width:600px) { .about-stats { grid-template-columns:1fr; } }
+.team-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:1rem; margin:1.5rem 0 2.5rem; }
+.team-card { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:1.5rem 1.1rem; text-align:center;
+  transition:border-color 0.25s, box-shadow 0.25s; }
+.team-card:hover { border-color:var(--accent-mid); box-shadow:var(--shadow-sm); }
+.team-avatar, .team-avatar-fallback { width:72px; height:72px; border-radius:50%;
+  margin:0 auto 0.8rem; }
+.team-avatar { object-fit:cover; display:block; border:2px solid var(--accent-light); }
+.team-avatar-fallback { background:var(--accent-light); color:var(--accent-dark);
+  display:flex; align-items:center; justify-content:center;
+  font-family:"Lora",serif; font-weight:600; font-size:1.25rem; }
+.team-name { font-weight:500; color:var(--ink); font-size:0.95rem; }
+.team-role { font-size:0.76rem; color:var(--ink-muted); margin-top:0.2rem; line-height:1.5; }
+.team-email { display:inline-block; font-size:0.75rem; margin-top:0.45rem; }
+
 /* FOOTER */
-footer { padding:2rem; border-top:1px solid var(--border); background:var(--surface); }
+footer { padding:3rem 2rem 0; border-top:1px solid var(--border); background:var(--surface); }
 .footer-inner { max-width:1100px; margin:0 auto; display:flex;
-  align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  align-items:flex-start; justify-content:space-between; gap:2.5rem;
+  flex-wrap:wrap; padding-bottom:2.25rem; }
+.footer-brand { max-width:240px; }
 .footer-logo { display:flex; align-items:center; gap:0.55rem;
-  text-decoration:none; color:var(--ink); }
-.footer-logo img { width:24px; height:24px; border-radius:50%; object-fit:cover; }
-.footer-name { font-family:"Lora",serif; font-weight:600; font-size:0.9rem; }
-.footer-tagline { font-size:0.77rem; color:var(--ink-faint); margin-left:0.5rem; }
-.footer-links { display:flex; flex-wrap:wrap; gap:0.5rem 1.4rem; }
-.footer-links a { font-size:0.79rem; color:var(--ink-muted); text-decoration:none; }
-.footer-links a:hover { color:var(--accent); }
+  text-decoration:none; color:var(--ink); margin-bottom:0.6rem; }
+.footer-logo img { width:26px; height:26px; border-radius:50%; object-fit:cover; }
+.footer-name { font-family:"Lora",serif; font-weight:600; font-size:0.95rem; }
+.footer-tagline { font-size:0.77rem; color:var(--ink-faint); line-height:1.6; }
+.footer-cols { display:flex; gap:3rem; flex-wrap:wrap; }
+.footer-col { display:flex; flex-direction:column; gap:0.45rem; min-width:120px; }
+.footer-col-title { font-size:0.68rem; font-weight:500; letter-spacing:0.12em;
+  text-transform:uppercase; color:var(--ink-faint); margin-bottom:0.25rem; }
+.footer-col a { font-size:0.82rem; color:var(--ink-muted); text-decoration:none;
+  transition:color 0.2s; }
+.footer-col a:hover { color:var(--accent); }
+.footer-bottom { max-width:1100px; margin:0 auto; border-top:1px solid var(--border-light);
+  padding:1rem 0 1.5rem; display:flex; justify-content:space-between;
+  align-items:center; gap:0.5rem 1.5rem; flex-wrap:wrap;
+  font-size:0.75rem; color:var(--ink-faint); }
+.footer-bottom a { color:var(--ink-muted); text-decoration:none; }
+.footer-bottom a:hover { color:var(--accent); }
 @media (max-width:640px) {
-  footer { padding:2rem 1.25rem; }
-  .footer-inner { flex-direction:column; align-items:flex-start; }
-  .footer-links { gap:0.4rem 1rem; }
+  footer { padding:2.5rem 1.25rem 0; }
+  .footer-cols { gap:2rem; }
 }
 """
 
@@ -959,6 +1078,7 @@ def nav_html(logo_name: str, active: str = "") -> str:
         ("getting-started.html",       "Getting Started", "getting-started"),
         ("submission-guidelines.html", "Submit Cards",    "submission-guidelines"),
         ("checklist.html",             "Checklist",       "checklist"),
+        ("about.html",                 "About",           "about"),
         ("sponsors.html",              "Sponsors",        "sponsors"),
     ]
     items = []
@@ -985,18 +1105,40 @@ def footer_html(logo_name: str) -> str:
     return f"""
 <footer>
   <div class="footer-inner">
-    <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+    <div class="footer-brand">
       <a class="footer-logo" href="index.html">{img}<span class="footer-name">Malleus</span></a>
-      <span class="footer-tagline">· Clinical Medicine · AU/NZ · Open Source · Not for Profit</span>
+      <p class="footer-tagline">Clinical Medicine · AU/NZ<br>Open Source · Not for Profit</p>
     </div>
-    <div class="footer-links">
-      <a href="sponsors.html">Sponsors</a>
-      <a href="https://malleuscm.notion.site/" target="_blank">Notion</a>
-      <a href="https://discord.gg/4WqgJzjVyH" target="_blank">Discord</a>
-      <a href="https://www.facebook.com/MalleusCM" target="_blank">Facebook</a>
-      <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank">Donate</a>
-      <a href="https://malleuscm.notion.site/about-project-malleus" target="_blank" rel="noopener">Contact</a>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <span class="footer-col-title">Project</span>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="submission-guidelines.html">Submit Cards</a>
+        <a href="checklist.html">Checklist</a>
+        <a href="about.html">About Us</a>
+        <a href="sponsors.html">Sponsors</a>
+        <a href="https://malleuscm.notion.site/" target="_blank" rel="noopener">Notion Hub</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Community</span>
+        <a href="https://discord.gg/4WqgJzjVyH" target="_blank" rel="noopener">Discord</a>
+        <a href="https://www.facebook.com/MalleusCM" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://www.instagram.com/projectmalleus" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.youtube.com/@MalleusClinicalMedicine" target="_blank" rel="noopener">YouTube</a>
+        <a href="https://community.ankihub.net/tags/c/ankihub-decks/updates/31/updates-malleus-clinical-medicine-aunz-stapedius/2338" target="_blank" rel="noopener">Newsletter</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Get Involved</span>
+        <a href="register.html">Register</a>
+        <a href="jobs-board.html">Jobs Board</a>
+        <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank" rel="noopener">Donate</a>
+        <a href="mailto:admin@malleus.org.au">Contact</a>
+      </div>
     </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; Project Malleus. Volunteer run, not for profit.</span>
+    <a href="terms-of-use.html">Terms of Use</a>
   </div>
 </footer>"""
 
@@ -1154,8 +1296,10 @@ def build_sponsors_page(logo_name: str) -> str:
     <h3>Become a sponsor</h3>
     <p>
       If your organisation would like to support open-source medical education in
-      Australia and New Zealand, we'd love to hear from you. Sponsorship directly funds
-      hosting, tooling, and the volunteer-driven maintenance of the deck.
+      Australia and New Zealand, we'd love to hear from you. Every sponsorship package
+      is personalised to your organisation — get in touch and we'll work out something
+      that fits. Sponsorship directly funds hosting, tooling, and the volunteer-driven
+      maintenance of the deck.
     </p>
     <a class="btn-sponsor" href="mailto:sponsorship@malleus.org.au">Get in Touch &rarr;</a>
   </div>
@@ -1163,6 +1307,206 @@ def build_sponsors_page(logo_name: str) -> str:
     return page_shell("Sponsors", logo_name, "sponsors", body, description=(
         "The sponsors who keep Malleus Clinical Medicine free for AU/NZ medical "
         "students — and how your organisation can support the project."))
+
+
+# Roles in display priority order (Contacts DB multi-select; unknown roles sort last)
+ROLE_ORDER = [
+    "President", "Vice-President", "Secretary", "Treasurer",
+    "Sponsorship Officer", "Publications/Promotions Officer", "IT Officer",
+    "Lead Malleus Maintainer", "Lead Content Review Officer", "JMO Rep",
+    "Maintainer", "Content Reviewer",
+]
+
+
+def build_jobs_page(logo_name: str) -> str:
+    print("  Fetching positions database…")
+    rows = fetch_db_rows(JOBS_DB_ID)
+    open_rows   = [r for r in rows if _prop(r, "Status", "select") == "Open"]
+    closed_rows = [r for r in rows if _prop(r, "Status", "select") == "Closed"]
+    open_rows.sort(key=lambda r: _prop(r, "Job Posted", "date") or "", reverse=True)
+
+    cards = ""
+    for r in open_rows:
+        title   = _prop(r, "Job Title", "title") or "Untitled position"
+        dept    = _prop(r, "Department", "select")
+        posted  = _fmt_date(_prop(r, "Job Posted", "date"))
+        closes  = _fmt_date(_prop(r, "Application Closing Date", "date"))
+        desc    = _prop(r, "Role Description", "rich_text")
+        reqs    = _prop(r, "Application Requirements", "rich_text")
+        email   = _prop(r, "Contact Email", "email") or "alex.lewis@malleus.org.au"
+        rules   = _prop(r, "Election Rules", "url")
+
+        meta = " · ".join(x for x in (
+            dept,
+            f"Posted {posted}" if posted else "",
+            f"Applications close {closes}" if closes else "Open until filled",
+        ) if x)
+        reqs_html  = f'<div class="job-req"><strong>To apply:</strong> {escape(reqs)}</div>' if reqs else ""
+        rules_html = (f'<a class="job-rules" href="{escape(rules)}" target="_blank" rel="noopener">Election rules &nearr;</a>'
+                      if rules else "")
+        cards += f"""
+  <div class="job-card">
+    <div class="job-head"><h3 class="job-title">{escape(title)}</h3><span class="job-status">Open</span></div>
+    <div class="job-meta">{escape(meta)}</div>
+    <p class="job-desc">{escape(desc)}</p>
+    {reqs_html}
+    <div class="job-actions">
+      <a class="btn-sponsor" href="mailto:{escape(email)}?subject=Application: {escape(title)}">Apply by Email &rarr;</a>
+      {rules_html}
+    </div>
+  </div>"""
+
+    if not cards:
+        cards = """
+  <div class="jobs-empty">
+    There are no open positions right now — but we're always happy to hear from keen
+    contributors. Email <a href="mailto:alex.lewis@malleus.org.au">alex.lewis@malleus.org.au</a>
+    to register your interest for the next round, or just start
+    <a href="submission-guidelines.html">suggesting cards</a> — most of our team started that way.
+  </div>"""
+
+    closed_html = ""
+    if closed_rows:
+        items = ""
+        for r in closed_rows:
+            title   = _prop(r, "Job Title", "title")
+            outcome = _prop(r, "Outcome", "rich_text")
+            items += f"<li><strong>{escape(title)}</strong>{' — ' + escape(outcome) if outcome else ''}</li>"
+        closed_html = f"""
+  <details class="notion-toggle" style="max-width:820px;">
+    <summary>Recently filled positions ({len(closed_rows)})</summary>
+    <div class="toggle-body"><ul class="notion-ul">{items}</ul></div>
+  </details>"""
+
+    body = f"""
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-eyebrow">We're Hiring</div>
+    <h1 class="page-title">Jobs Board</h1>
+    <p class="page-subtitle">
+      Malleus is run entirely by volunteer medical students and junior doctors —
+      and we're always looking for more. Open committee positions are listed below
+      and update automatically.
+    </p>
+  </div>
+</div>
+<div class="page-content">
+  <div class="notion-callout notion-callout-blue" style="max-width:820px;">
+    <span class="callout-icon">📨</span>
+    <div>Questions about a role, or want to apply outside the formal election period?
+    Email our Secretary at <a href="mailto:alex.lewis@malleus.org.au">alex.lewis@malleus.org.au</a>
+    with your name, uni or work status (e.g. PGY1), and location. You can see the current
+    committee on our <a href="about.html">About page</a>.</div>
+  </div>
+  {cards}
+  {closed_html}
+</div>"""
+    return page_shell("Jobs Board", logo_name, "jobs-board", body, description=(
+        "Open volunteer positions on the Malleus Clinical Medicine committee — "
+        "join the team behind the AU/NZ Anki deck."))
+
+
+def build_about_page(logo_name: str) -> str:
+    print("  Fetching contacts database…")
+    rows = fetch_db_rows(CONTACTS_DB_ID)
+
+    def role_rank(r):
+        roles = _prop(r, "Role(s)", "multi_select")
+        ranks = [ROLE_ORDER.index(x) for x in roles if x in ROLE_ORDER] or [len(ROLE_ORDER)]
+        return (min(ranks), _prop(r, "Name", "title"))
+
+    rows.sort(key=role_rank)
+
+    team_cards = ""
+    for r in rows:
+        name  = _prop(r, "Name", "title")
+        if not name:
+            continue
+        roles = _prop(r, "Role(s)", "multi_select")
+        roles = sorted(roles, key=lambda x: ROLE_ORDER.index(x) if x in ROLE_ORDER else len(ROLE_ORDER))
+        email = _prop(r, "Email", "email")
+        # Photos are optional: drop team/<name-slug>.jpg|.png next to build.py
+        photo = next((f"team/{_slugify(name)}{ext}" for ext in (".jpg", ".jpeg", ".png")
+                      if Path(f"team/{_slugify(name)}{ext}").exists()), None)
+        if photo:
+            avatar = f'<img class="team-avatar" src="{photo}" alt="{escape(name)}" loading="lazy">'
+        else:
+            initials = "".join(w[0] for w in name.split()[:2]).upper()
+            avatar = f'<div class="team-avatar-fallback">{escape(initials)}</div>'
+        email_html = f'<a class="team-email" href="mailto:{escape(email)}">{escape(email)}</a>' if email else ""
+        team_cards += f"""
+    <div class="team-card">
+      {avatar}
+      <div class="team-name">{escape(name)}</div>
+      <div class="team-role">{escape(" · ".join(roles))}</div>
+      {email_html}
+    </div>"""
+
+    team_section = f'<div class="team-grid">{team_cards}\n  </div>' if team_cards else """
+  <p class="about-prose">Our full committee list is on
+  <a href="https://malleuscm.notion.site/about-project-malleus" target="_blank" rel="noopener">Notion</a>.</p>"""
+
+    body = f"""
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-eyebrow">Who We Are</div>
+    <h1 class="page-title">About Project Malleus</h1>
+    <p class="page-subtitle">
+      A volunteer-run, not-for-profit student association with one mission:
+      to radically reform medical education in Australia and New Zealand.
+    </p>
+  </div>
+</div>
+<div class="page-content">
+  <div class="about-prose">
+    <p>
+      Project Malleus was founded by <strong>Eric Smith</strong> in 2022, with the
+      invaluable help of <strong>Sabiqul Hoque</strong> — both now PGY2 resident medical
+      officers. What started as a student project has grown into the largest
+      collaborative clinical medicine Anki deck written for Australian and New Zealand
+      practice, and it has always stayed volunteer run, open source, and free to use.
+    </p>
+    <p>
+      <strong>Hugh Fenton-White</strong>, our Lead Malleus Maintainer, oversees deck
+      completion — which we anticipate by December 2026 — assisted by
+      <strong>Michael Colla</strong>, our Lead Content Reviewer, and a team of
+      maintainers who review every community submission.
+    </p>
+  </div>
+
+  <div class="about-stats">
+    <div class="about-stat"><div class="about-stat-value">2,000+</div><div class="about-stat-label">Active subscribers on AnkiHub</div></div>
+    <div class="about-stat"><div class="about-stat-value">11</div><div class="about-stat-label">Volunteer maintainers</div></div>
+    <div class="about-stat"><div class="about-stat-value">100%</div><div class="about-stat-label">Volunteer run &amp; not for profit</div></div>
+  </div>
+
+  <h2 class="about-h">The Committee</h2>
+  {team_section}
+
+  <div class="sponsor-invite">
+    <h3>We're hiring</h3>
+    <p>
+      Malleus runs on volunteers, and there's always room for more — from committee
+      positions to maintainers and content reviewers. Open roles are listed on our
+      jobs board and update automatically.
+    </p>
+    <a class="btn-sponsor" href="jobs-board.html">View Open Positions &rarr;</a>
+  </div>
+
+  <h2 class="about-h" id="contact">Get in Touch</h2>
+  <p class="about-prose">
+    General enquiries: <a href="mailto:admin@malleus.org.au">admin@malleus.org.au</a> ·
+    You can also find us on <a href="https://discord.gg/4WqgJzjVyH" target="_blank" rel="noopener">Discord</a>,
+    <a href="https://www.instagram.com/projectmalleus" target="_blank" rel="noopener">Instagram</a>,
+    <a href="https://www.youtube.com/@MalleusClinicalMedicine" target="_blank" rel="noopener">YouTube</a> and
+    <a href="https://www.facebook.com/MalleusCM" target="_blank" rel="noopener">Facebook</a>.
+    If you'd like to support our work, you can
+    <a href="https://www.paypal.com/donate/?hosted_button_id=N5G46YHELZJ6C" target="_blank" rel="noopener">buy us a coffee</a>.
+  </p>
+</div>"""
+    return page_shell("About Us", logo_name, "about", body, description=(
+        "Project Malleus is a volunteer-run, not-for-profit student association building "
+        "the open-source clinical medicine Anki deck for Australia and New Zealand."))
 
 
 def build_404_page(logo_name: str) -> str:
@@ -1195,7 +1539,8 @@ def write_seo_files():
     from datetime import date
     today = date.today().isoformat()
     pages = ["", "getting-started.html", "submission-guidelines.html",
-             "checklist.html", "sponsors.html", "register.html"]
+             "checklist.html", "about.html", "jobs-board.html",
+             "sponsors.html", "register.html", "terms-of-use.html"]
     urls = "".join(
         f"<url><loc>{SITE_URL}{p}</loc><lastmod>{today}</lastmod></url>" for p in pages)
     (DIST_DIR / "sitemap.xml").write_text(
@@ -1375,6 +1720,25 @@ def main():
         NOTION_PAGES["checklist"], "checklist", logo_name
     )
     (DIST_DIR / "checklist.html").write_text(html, encoding="utf-8")
+
+    print("📄  Generating Terms of Use page…")
+    html = build_notion_page(
+        "Terms of Use", "Legal",
+        "The terms and conditions for using the Malleus deck, website, and associated materials.",
+        NOTION_PAGES["terms-of-use"], "terms-of-use", logo_name
+    )
+    (DIST_DIR / "terms-of-use.html").write_text(html, encoding="utf-8")
+
+    print("📄  Generating Jobs Board page…")
+    html = build_jobs_page(logo_name)
+    (DIST_DIR / "jobs-board.html").write_text(html, encoding="utf-8")
+
+    print("📄  Generating About page…")
+    html = build_about_page(logo_name)
+    (DIST_DIR / "about.html").write_text(html, encoding="utf-8")
+    if Path("team").exists():
+        shutil.copytree("team", DIST_DIR / "team", dirs_exist_ok=True)
+        print("  ✅  team/ photos copied to dist/")
 
     print("📄  Generating Sponsors page…")
     html = build_sponsors_page(logo_name)
