@@ -1258,6 +1258,64 @@
 
     .btn-donate-white:active { transform: scale(0.97); }
 
+    /* ─── FAQ ─── */
+    #faq {
+      background: var(--surface);
+      border-top: 1px solid var(--border-light);
+    }
+
+    .faq-list {
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .faq-item {
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      transition: border-color 0.25s var(--ease-out);
+    }
+
+    .faq-item[open],
+    .faq-item:hover { border-color: var(--accent-mid); }
+
+    .faq-item summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.1rem 1.5rem;
+      font-family: "Lora", serif;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-chevron {
+      flex-shrink: 0;
+      color: var(--accent);
+      font-size: 0.85rem;
+      transition: transform 0.3s var(--ease-out);
+    }
+
+    .faq-item[open] .faq-chevron { transform: rotate(180deg); }
+
+    .faq-body {
+      padding: 0 1.5rem 1.25rem;
+      font-size: 0.92rem;
+      color: var(--ink-muted);
+      font-weight: 300;
+      line-height: 1.7;
+    }
+
+    .faq-body a { color: var(--accent); }
+
     /* ─── SPONSORS STRIP ─── */
     #sponsors-strip {
       background: var(--surface);
@@ -1419,60 +1477,57 @@
       .donate-text p { max-width: none; }
     }
 
-    @media (max-width: 800px) {
-      /* Phone on top, steps below — both share the same grid cell so the phone
-         rail is as tall as the steps column, keeping position:sticky active. */
-      .tour-layout { grid-template-columns: 1fr; }
-      .tour-phone-rail,
-      .tour-steps   { grid-row: 1; grid-column: 1; }
+    .tour-nums { display: none; }
 
-      .tour-phone-rail {
-        align-self: stretch;
-        pointer-events: none;
-        z-index: 2;
-      }
+    @media (max-width: 800px) {
+      /* Interactive showcase: phone + numbered rail on top, active feature card
+         below. Nothing is sticky or scroll-driven — tap a number to switch
+         features; the page scrolls past the section freely. */
+      .tour-layout { grid-template-columns: 1fr; gap: 1.75rem; }
+      .tour-phone-rail { align-self: auto; }
       .tour-phone-sticky {
-        position: sticky;
-        top: 64px;
+        position: static;
         display: flex;
         justify-content: center;
-        background: var(--bg);
-        padding: 0.75rem 0 0;
-        pointer-events: none;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 0;
       }
-      .phone-wrap {
-        max-width: 260px;
-        margin: 0 auto;
-        pointer-events: auto;
+      .phone-wrap { max-width: 230px; margin: 0; }
+
+      .tour-nums { display: flex; flex-direction: column; gap: 0.6rem; }
+      .tour-num-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--ink-muted);
+        font-family: "Lora", serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.25s var(--ease-out), color 0.25s var(--ease-out),
+                    border-color 0.25s var(--ease-out), transform 0.2s var(--ease-out);
+      }
+      .tour-num-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        transform: scale(1.1);
       }
 
-      .tour-steps {
-        align-self: start;
-        padding-top: 360px;
-        z-index: 1;
-      }
-      .tour-step   { display: block; min-height: 70vh; padding: 0.75rem 0; }
-      /* All cards hidden; JS adds .tour-visible when section is being scrolled */
+      .tour-steps { display: block; }
+      .tour-step { display: none; min-height: 0; padding: 0; }
+      .tour-step.active { display: block; }
       .tour-step-inner {
-        opacity: 0 !important;
-        transform: translateY(8px);
-        padding: 1.25rem 1rem;
-        transition: opacity 0.45s ease, transform 0.45s ease;
+        opacity: 1;
+        transform: none;
+        padding: 1.4rem 1.25rem;
+        min-height: 170px; /* uniform card height so switching features doesn't shift the page */
+        animation: fadeInUp 0.35s var(--ease-out);
       }
-      #card-tour.tour-visible .tour-step-inner {
-        position: fixed;
-        top: var(--card-top, 610px);
-        left: 2.5rem;
-        right: 2.5rem;
-        z-index: 30;
-        opacity: 0 !important;
-        transform: translateY(8px);
-      }
-      #card-tour.tour-visible .tour-step.active .tour-step-inner {
-        opacity: 1 !important;
-        transform: translateY(0);
-      }
-      .tour-step-inner::after { transform: scaleY(0); }
+      .tour-step.active .tour-step-inner::after { transform: scaleY(1); }
       .tour-step-num   { font-size: 0.68rem; }
       .tour-step-title { font-size: 1.05rem; }
       .tour-step-desc  { font-size: 0.85rem; line-height: 1.65; }
@@ -1480,8 +1535,6 @@
     }
 
     @media (max-width: 600px) {
-      #card-tour.tour-visible .tour-step-inner { left: 1.25rem; right: 1.25rem; }
-
       section { padding: 5rem 1.25rem; }
       nav { padding: 0 1.25rem; }
       .hero { padding: 90px 1.25rem 60px; }
@@ -1597,6 +1650,14 @@
               <img id="anki-screenshot" src="anki-screenshot.jpg" alt="Anki card screenshot">
             </div>
             <img class="phone-frame-img" src="phone-transparent.png" alt="Phone frame" aria-hidden="true">
+          </div>
+          <!-- Mobile only: numbered feature selector -->
+          <div class="tour-nums" aria-label="Choose a feature to preview">
+            <button type="button" class="tour-num-btn active" aria-pressed="true" aria-label="Feature 1">1</button>
+            <button type="button" class="tour-num-btn" aria-pressed="false" aria-label="Feature 2">2</button>
+            <button type="button" class="tour-num-btn" aria-pressed="false" aria-label="Feature 3">3</button>
+            <button type="button" class="tour-num-btn" aria-pressed="false" aria-label="Feature 4">4</button>
+            <button type="button" class="tour-num-btn" aria-pressed="false" aria-label="Feature 5">5</button>
           </div>
         </div>
       </div>
@@ -1992,6 +2053,85 @@
   </div>
 </section>
 
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">FAQ</div>
+      <h2 class="section-title">Common questions</h2>
+    </div>
+
+    <div class="faq-list reveal">
+      <details class="faq-item">
+        <summary>Is Malleus really free? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          Yes — the deck, the website, and all our guides are completely free. Malleus is a
+          not-for-profit student association run by volunteers. The deck is hosted on AnkiHub,
+          which offers full scholarships so you never have to pay for that either.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I have to pay for AnkiHub? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          No. Apply for <a href="https://www.ankihub.net/scholarships" target="_blank" rel="noopener">AnkiHub's scholarship</a>
+          — it's available to everyone and identical to the paid plan. Approval usually takes a
+          few days; the paid option ($6 USD/month) only exists if you'd rather not wait.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What year level is the deck for? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          Content targets clinical years through to internship — roughly final-year exam depth.
+          Cards are tagged by yield, so you can start with just the high-yield foundations and
+          add depth as you go. Preclinical students are welcome too; you'll simply meet some
+          content early.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How is Malleus different from AnKing? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          AnKing is built around the USMLE and American guidelines. Malleus references Australian
+          and New Zealand sources — eTG Complete, AMH, RCH, and local college guidelines — so the
+          management answers match what you'll actually be examined on (and chart as a junior
+          doctor) here.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I need a computer? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          You can review on your phone with AnkiMobile or AnkiDroid, but you'll need the free
+          desktop version of Anki to install and sync the deck. The
+          <a href="getting-started.html">Getting Started guide</a> walks through the whole setup
+          in about 15 minutes.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I contribute cards? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          Absolutely — the deck is built from community suggestions. Read the
+          <a href="submission-guidelines.html">Submission Guidelines</a>, run through the
+          <a href="checklist.html">checklist</a>, and suggest your card through AnkiHub.
+          Consistent contributors are often invited to join the maintainer team.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>I found an error in a card — what do I do? <span class="faq-chevron">&#9660;</span></summary>
+        <div class="faq-body">
+          Press <strong>E</strong> while reviewing the card, fix it, and click "Suggest a change"
+          with a short rationale — the maintainer team will review it. Not sure about the fix?
+          Ask in our <a href="https://discord.gg/4WqgJzjVyH" target="_blank" rel="noopener">Discord</a> first.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
 <!-- SPONSORS STRIP -->
 <section id="sponsors-strip">
   <div class="section-inner">
@@ -2028,6 +2168,21 @@
   </div>
 </footer>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Is Malleus really free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — the deck, the website, and all guides are completely free. Malleus is a not-for-profit student association run by volunteers. The deck is hosted on AnkiHub, which offers full scholarships so you never have to pay."}},
+    {"@type": "Question", "name": "Do I have to pay for AnkiHub?", "acceptedAnswer": {"@type": "Answer", "text": "No. AnkiHub's scholarship is available to everyone and identical to the paid plan. Approval usually takes a few days; the paid option only exists if you'd rather not wait."}},
+    {"@type": "Question", "name": "What year level is the deck for?", "acceptedAnswer": {"@type": "Answer", "text": "Content targets clinical years through to internship — roughly final-year exam depth. Cards are tagged by yield so you can start with high-yield foundations and add depth as you go."}},
+    {"@type": "Question", "name": "How is Malleus different from AnKing?", "acceptedAnswer": {"@type": "Answer", "text": "AnKing is built around the USMLE and American guidelines. Malleus references Australian and New Zealand sources — eTG Complete, AMH, RCH, and local college guidelines — so management answers match local exams and practice."}},
+    {"@type": "Question", "name": "Do I need a computer?", "acceptedAnswer": {"@type": "Answer", "text": "You can review on your phone with AnkiMobile or AnkiDroid, but you need the free desktop version of Anki to install and sync the deck."}},
+    {"@type": "Question", "name": "Can I contribute cards?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — the deck is built from community suggestions through AnkiHub. Read the Submission Guidelines first; consistent contributors are often invited to join the maintainer team."}}
+  ]
+}
+</script>
+
 <script>
 // Mobile nav toggle
 function toggleMobileNav() {
@@ -2062,11 +2217,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// ─── CARD TOUR: phone scrollytelling ─────────────────────────────────────────
-// Geometry (step centres, section bounds, clip size) is measured once and
-// cached — the scroll path does no layout reads on desktop. The screenshot
-// eases toward its target in a rAF loop (damped follower), so discrete wheel
-// ticks produce smooth motion instead of stepped jumps.
+// ─── CARD TOUR ────────────────────────────────────────────────────────────────
+// Desktop (>800px): scroll-driven scrollytelling. Geometry is cached so the
+// scroll path does no layout reads; the screenshot eases toward its target in
+// a damped rAF follower.
+// Mobile (≤800px): tap-driven showcase. The numbered rail switches features;
+// the page scrolls past the section freely.
 (function() {
   var IMG_ASPECT = 6078 / 1080;
 
@@ -2074,19 +2230,20 @@ document.addEventListener('DOMContentLoaded', function() {
   var screenClip = document.getElementById('phone-screen-clip');
   var screenshot = document.getElementById('anki-screenshot');
   var stepEls    = Array.prototype.slice.call(document.querySelectorAll('#card-tour .tour-step'));
+  var numBtns    = Array.prototype.slice.call(document.querySelectorAll('#card-tour .tour-num-btn'));
 
   if (!section || !screenshot || !stepEls.length) return;
 
-  var phoneSticky  = section.querySelector('.tour-phone-sticky');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function isMobile() { return window.innerWidth <= 800; }
 
   var scrollTargets = stepEls.map(function(el) {
     return parseFloat(el.dataset.scroll || '0') / 100;
   });
 
   // ── Cached geometry (recomputed on resize/load, never during scroll) ──────
-  var centres = [], maxScroll = 0, sectionTop = 0, sectionBottom = 0,
-      stepsTopAbs = 0, stepsBotAbs = 0;
+  var centres = [], maxScroll = 0, sectionTop = 0, sectionBottom = 0;
 
   function measure() {
     var sy = window.scrollY;
@@ -2094,10 +2251,6 @@ document.addEventListener('DOMContentLoaded', function() {
       var r = el.getBoundingClientRect();
       return sy + r.top + r.height / 2;
     });
-    var first = stepEls[0].getBoundingClientRect();
-    var last  = stepEls[stepEls.length - 1].getBoundingClientRect();
-    stepsTopAbs   = sy + first.top;
-    stepsBotAbs   = sy + last.bottom;
     var sr = section.getBoundingClientRect();
     sectionTop    = sy + sr.top;
     sectionBottom = sy + sr.bottom;
@@ -2134,46 +2287,47 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!rafId) rafId = requestAnimationFrame(tick);
   }
 
-  // ── Per-scroll update: pure arithmetic on cached geometry ──────────────────
-  var lastActiveIndex = -1;
+  // ── Shared active-state handling (step cards + number buttons) ─────────────
+  var activeIdx = -1;
 
+  function applyActive(idx) {
+    if (idx === activeIdx || idx < 0) return;
+    activeIdx = idx;
+    stepEls.forEach(function(el, i) { el.classList.toggle('active', i === idx); });
+    numBtns.forEach(function(b, i) {
+      b.classList.toggle('active', i === idx);
+      b.setAttribute('aria-pressed', i === idx ? 'true' : 'false');
+    });
+  }
+
+  function setTargetForIdx(idx, jump) {
+    targetY = -(scrollTargets[idx] * maxScroll);
+    startAnim(jump);
+  }
+
+  // Mobile: tap a number to switch features
+  numBtns.forEach(function(btn, i) {
+    btn.addEventListener('click', function() {
+      applyActive(i);
+      setTargetForIdx(i, false);
+    });
+  });
+
+  // ── Desktop scroll path: pure arithmetic on cached geometry ────────────────
   function update(jump) {
     var sy = window.scrollY;
-    // Skip all work while the tour is far off-screen
     if (sy + window.innerHeight < sectionTop - 300 || sy > sectionBottom + 300) return;
 
-    var isMobile    = window.innerWidth <= 800;
     var vpCenterAbs = sy + window.innerHeight / 2;
 
-    // Active step = nearest cached centre to viewport centre
     var bestIdx = 0, bestDist = Infinity;
     for (var i = 0; i < centres.length; i++) {
       var d = Math.abs(centres[i] - vpCenterAbs);
       if (d < bestDist) { bestDist = d; bestIdx = i; }
     }
-
-    if (isMobile && phoneSticky) {
-      // The sticky phone's position depends on scroll — this is the one
-      // unavoidable layout read on the mobile path.
-      var psRect = phoneSticky.getBoundingClientRect();
-      var phoneStuck = psRect.top <= 100;
-      if (phoneStuck) {
-        section.style.setProperty('--card-top', Math.round(psRect.bottom + 12) + 'px');
-      }
-      var inZone = phoneStuck &&
-        (stepsTopAbs - sy) < psRect.bottom + 150 &&
-        (stepsBotAbs - sy) > psRect.bottom + 100;
-      section.classList.toggle('tour-visible', inZone);
-      if (!inZone) bestIdx = lastActiveIndex;
-    }
-
-    if (bestIdx !== lastActiveIndex && bestIdx >= 0) {
-      lastActiveIndex = bestIdx;
-      stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
-    }
+    applyActive(bestIdx);
 
     // Interpolate the screenshot target between adjacent step targets.
-    // Gentle smoothstep only — the damped follower supplies the fluidity.
     var prevIdx = 0;
     for (var j = 0; j < centres.length; j++) {
       if (centres[j] <= vpCenterAbs) prevIdx = j;
@@ -2194,23 +2348,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var scrollQueued = false;
   function onScroll() {
-    if (scrollQueued) return;
+    if (isMobile() || scrollQueued) return;
     scrollQueued = true;
     requestAnimationFrame(function() { update(false); scrollQueued = false; });
   }
 
+  function init(jump) {
+    if (isMobile()) {
+      applyActive(activeIdx < 0 ? 0 : activeIdx);
+      setTargetForIdx(activeIdx, jump);
+    } else {
+      update(jump);
+    }
+  }
+
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function() {
-    lastActiveIndex = -1;
-    section.classList.remove('tour-visible');
-    measure();
-    update(true);
-  }, { passive: true });
+  window.addEventListener('resize', function() { measure(); init(true); }, { passive: true });
   // Re-measure once everything (images, fonts) has loaded and shifted layout
-  window.addEventListener('load', function() { measure(); update(true); });
+  window.addEventListener('load', function() { measure(); init(true); });
 
   measure();
-  update(true);
+  init(true);
 })();
 </script>
 </body>

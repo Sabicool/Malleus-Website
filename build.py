@@ -299,7 +299,7 @@ def blocks_to_html(blocks: list, depth: int = 0) -> str:
                 text  = rich_text_to_html(bd.get("rich_text", []))
                 ck    = "checked" if bd.get("checked") else ""
                 ch    = blocks_to_html(bi.get("_children", [])) if bi.get("_children") else ""
-                items.append(f'<li class="notion-todo"><input type="checkbox" {ck} disabled><span class="notion-todo-text">{text}</span>{ch}</li>')
+                items.append(f'<li class="notion-todo"><input type="checkbox" {ck}><span class="notion-todo-text">{text}</span>{ch}</li>')
                 i += 1
             html.append(f'<ul class="notion-todo-list">{"".join(items)}</ul>')
             continue
@@ -506,6 +506,49 @@ document.addEventListener('DOMContentLoaded', function() {
       if (n) n.classList.remove('mobile-open');
     });
   });
+
+  // Click-to-copy for inline code (add-on codes, tags)
+  if (navigator.clipboard) {
+    document.querySelectorAll('.page-content code').forEach(function(el) {
+      if (el.closest('pre')) return;
+      el.classList.add('code-copy');
+      el.title = 'Click to copy';
+      el.addEventListener('click', function() {
+        navigator.clipboard.writeText(el.textContent).then(function() {
+          el.classList.add('copied');
+          setTimeout(function() { el.classList.remove('copied'); }, 1300);
+        });
+      });
+    });
+  }
+
+  // Tickable checklists, remembered per page in this browser
+  var boxes = Array.prototype.slice.call(
+    document.querySelectorAll('.notion-todo input[type=checkbox]'));
+  if (boxes.length) {
+    boxes.forEach(function(cb, i) {
+      var key = 'malleus-todo:' + location.pathname + ':' + i;
+      var saved = localStorage.getItem(key);
+      if (saved !== null) cb.checked = saved === '1';
+      cb.addEventListener('change', function() {
+        localStorage.setItem(key, cb.checked ? '1' : '0');
+      });
+    });
+    if (boxes.length > 3) {
+      var reset = document.createElement('button');
+      reset.type = 'button';
+      reset.className = 'todo-reset';
+      reset.textContent = '\\u21BA Reset all checkboxes';
+      reset.addEventListener('click', function() {
+        boxes.forEach(function(cb, i) {
+          cb.checked = false;
+          localStorage.removeItem('malleus-todo:' + location.pathname + ':' + i);
+        });
+      });
+      var first = document.querySelector('.notion-todo-list');
+      if (first) first.parentNode.insertBefore(reset, first);
+    }
+  }
 });
 """
 
@@ -614,6 +657,19 @@ nav { position: fixed; top:0; left:0; right:0; z-index:100;
 .notion-code code { font-family:"Fira Code","Consolas",monospace; }
 code { background:#E8EFF5; color:var(--accent-dark); padding:0.1em 0.35em;
   border-radius:3px; font-size:0.88em; font-family:"Fira Code","Consolas",monospace; }
+code.code-copy { cursor:pointer; position:relative; transition:background 0.2s; }
+code.code-copy:hover { background:#D8E6F3; }
+code.code-copy.copied::after { content:"Copied \\2713"; position:absolute; top:-1.9em;
+  left:50%; transform:translateX(-50%); background:var(--ink); color:#fff;
+  font-size:0.72rem; font-family:"Outfit",sans-serif; padding:0.18rem 0.55rem;
+  border-radius:4px; white-space:nowrap; z-index:5; }
+.notion-todo input { cursor:pointer; }
+.notion-todo:has(input:checked) > .notion-todo-text { color:var(--ink-faint); }
+.todo-reset { display:inline-flex; align-items:center; gap:0.3rem; background:none;
+  border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--ink-muted);
+  font-family:inherit; font-size:0.78rem; padding:0.3rem 0.8rem; cursor:pointer;
+  margin-bottom:1rem; transition:border-color 0.2s, color 0.2s; }
+.todo-reset:hover { border-color:var(--accent-mid); color:var(--accent); }
 .notion-divider { border:none; border-top:1px solid var(--border); margin:2rem 0; }
 .notion-quote { border-left:3px solid var(--accent); padding:0.5rem 1.25rem;
   margin:1.25rem 0; color:var(--ink-muted); font-style:italic; }
@@ -1109,6 +1165,47 @@ def build_sponsors_page(logo_name: str) -> str:
         "students — and how your organisation can support the project."))
 
 
+def build_404_page(logo_name: str) -> str:
+    body = """
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-eyebrow">404</div>
+    <h1 class="page-title">This card has been suspended</h1>
+    <p class="page-subtitle">
+      The page you're looking for doesn't exist — it may have moved, been deleted,
+      or never made it past the maintainer review.
+    </p>
+  </div>
+</div>
+<div class="page-content">
+  <div class="sponsor-actions" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a class="btn-sponsor" href="index.html">Back to Home &rarr;</a>
+    <a class="btn-sponsor" style="background:var(--surface);color:var(--ink) !important;border:1px solid var(--border);" href="getting-started.html">Getting Started</a>
+  </div>
+</div>"""
+    html = page_shell("Page Not Found", logo_name, "", body,
+                      description="Page not found — Malleus Clinical Medicine.")
+    # GitHub Pages serves 404.html for any missing path, including nested ones,
+    # so relative links need an explicit base to keep resolving to the site root.
+    return html.replace("<head>", f'<head>\n  <base href="{SITE_URL}">', 1)
+
+
+def write_seo_files():
+    """Write sitemap.xml and robots.txt into dist/."""
+    from datetime import date
+    today = date.today().isoformat()
+    pages = ["", "getting-started.html", "submission-guidelines.html",
+             "checklist.html", "sponsors.html", "register.html"]
+    urls = "".join(
+        f"<url><loc>{SITE_URL}{p}</loc><lastmod>{today}</lastmod></url>" for p in pages)
+    (DIST_DIR / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
+        encoding="utf-8")
+    (DIST_DIR / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+
+
 def build_register_page(form_ids: dict, logo_name: str) -> str:
     # Map field labels to entry IDs (with fallbacks)
     # Common fallback IDs — replace these with real ones from discover_form_entry_ids()
@@ -1282,6 +1379,10 @@ def main():
     print("📄  Generating Sponsors page…")
     html = build_sponsors_page(logo_name)
     (DIST_DIR / "sponsors.html").write_text(html, encoding="utf-8")
+
+    print("📄  Generating 404 page, sitemap.xml and robots.txt…")
+    (DIST_DIR / "404.html").write_text(build_404_page(logo_name), encoding="utf-8")
+    write_seo_files()
 
     print("📄  Copying register.html…")
     if Path("register.html").exists():
