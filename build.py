@@ -882,7 +882,6 @@ a { color:var(--accent); }
   padding:0.8rem 1rem; margin:0.9rem 0; line-height:1.65; }
 .job-actions { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;
   margin-top:1rem; }
-.job-rules { font-size:0.82rem; }
 .jobs-empty { background:var(--surface); border:1px dashed var(--border);
   border-radius:var(--radius-lg); padding:2rem; max-width:820px;
   color:var(--ink-muted); font-size:0.95rem; }
@@ -1318,12 +1317,29 @@ ROLE_ORDER = [
 ]
 
 
+# Open positions whose title contains one of these (case-insensitive) are pinned
+# to the top of the jobs board, in this order; everything else follows by date.
+PINNED_JOBS = ("publications/promotions",)
+
+
 def build_jobs_page(logo_name: str) -> str:
     print("  Fetching positions database…")
     rows = fetch_db_rows(JOBS_DB_ID)
-    open_rows   = [r for r in rows if _prop(r, "Status", "select") == "Open"]
-    closed_rows = [r for r in rows if _prop(r, "Status", "select") == "Closed"]
+    open_rows = [r for r in rows if _prop(r, "Status", "select") == "Open"]
+
+    # Newest first, then stable-sort pinned titles to the top
     open_rows.sort(key=lambda r: _prop(r, "Job Posted", "date") or "", reverse=True)
+    open_rows.sort(key=lambda r: next(
+        (i for i, p in enumerate(PINNED_JOBS)
+         if p in _prop(r, "Job Title", "title").lower()), len(PINNED_JOBS)))
+
+    # Election rules apply board-wide: surface the most common link once, up top
+    from collections import Counter
+    rules_counts = Counter(u for r in rows if (u := _prop(r, "Election Rules", "url")))
+    rules_url = rules_counts.most_common(1)[0][0] if rules_counts else ""
+    rules_intro = (f' Most positions are filled by election — read the '
+                   f'<a href="{escape(rules_url)}" target="_blank" rel="noopener">election rules</a> '
+                   f'before applying.' if rules_url else "")
 
     cards = ""
     for r in open_rows:
@@ -1333,26 +1349,23 @@ def build_jobs_page(logo_name: str) -> str:
         closes  = _fmt_date(_prop(r, "Application Closing Date", "date"))
         desc    = _prop(r, "Role Description", "rich_text")
         reqs    = _prop(r, "Application Requirements", "rich_text")
-        email   = _prop(r, "Contact Email", "email") or "alex.lewis@malleus.org.au"
-        rules   = _prop(r, "Election Rules", "url")
+        email   = _prop(r, "Contact Email", "email") or "secretary@malleus.org.au"
 
         meta = " · ".join(x for x in (
             dept,
             f"Posted {posted}" if posted else "",
             f"Applications close {closes}" if closes else "Open until filled",
         ) if x)
-        reqs_html  = f'<div class="job-req"><strong>To apply:</strong> {escape(reqs)}</div>' if reqs else ""
-        rules_html = (f'<a class="job-rules" href="{escape(rules)}" target="_blank" rel="noopener">Election rules &nearr;</a>'
-                      if rules else "")
+        desc_html = f'<p class="job-desc">{escape(desc)}</p>' if desc else ""
+        reqs_html = f'<div class="job-req"><strong>To apply:</strong> {escape(reqs)}</div>' if reqs else ""
         cards += f"""
   <div class="job-card">
     <div class="job-head"><h3 class="job-title">{escape(title)}</h3><span class="job-status">Open</span></div>
     <div class="job-meta">{escape(meta)}</div>
-    <p class="job-desc">{escape(desc)}</p>
+    {desc_html}
     {reqs_html}
     <div class="job-actions">
       <a class="btn-sponsor" href="mailto:{escape(email)}?subject=Application: {escape(title)}">Apply by Email &rarr;</a>
-      {rules_html}
     </div>
   </div>"""
 
@@ -1364,19 +1377,6 @@ def build_jobs_page(logo_name: str) -> str:
     to register your interest for the next round, or just start
     <a href="submission-guidelines.html">suggesting cards</a> — most of our team started that way.
   </div>"""
-
-    closed_html = ""
-    if closed_rows:
-        items = ""
-        for r in closed_rows:
-            title   = _prop(r, "Job Title", "title")
-            outcome = _prop(r, "Outcome", "rich_text")
-            items += f"<li><strong>{escape(title)}</strong>{' — ' + escape(outcome) if outcome else ''}</li>"
-        closed_html = f"""
-  <details class="notion-toggle" style="max-width:820px;">
-    <summary>Recently filled positions ({len(closed_rows)})</summary>
-    <div class="toggle-body"><ul class="notion-ul">{items}</ul></div>
-  </details>"""
 
     body = f"""
 <div class="page-header">
@@ -1396,10 +1396,9 @@ def build_jobs_page(logo_name: str) -> str:
     <div>Questions about a role, or want to apply outside the formal election period?
     Email our Secretary at <a href="mailto:secretary@malleus.org.au">secretary@malleus.org.au</a>
     with your name, uni or work status (e.g. PGY1), and location. You can see the current
-    committee on our <a href="about.html">About page</a>.</div>
+    committee on our <a href="about.html">About page</a>.{rules_intro}</div>
   </div>
   {cards}
-  {closed_html}
 </div>"""
     return page_shell("Jobs Board", logo_name, "jobs-board", body, description=(
         "Open volunteer positions on the Malleus Clinical Medicine committee — "
