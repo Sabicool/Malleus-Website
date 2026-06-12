@@ -1157,7 +1157,7 @@ def build_sponsors_page(logo_name: str) -> str:
       Australia and New Zealand, we'd love to hear from you. Sponsorship directly funds
       hosting, tooling, and the volunteer-driven maintenance of the deck.
     </p>
-    <a class="btn-sponsor" href="mailto:president@malleus.org.au">Get in Touch &rarr;</a>
+    <a class="btn-sponsor" href="mailto:sponsorship@malleus.org.au">Get in Touch &rarr;</a>
   </div>
 </div>"""
     return page_shell("Sponsors", logo_name, "sponsors", body, description=(
