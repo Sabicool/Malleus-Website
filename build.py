@@ -762,9 +762,14 @@ footer { padding:2rem; border-top:1px solid var(--border); background:var(--surf
 .footer-logo img { width:24px; height:24px; border-radius:50%; object-fit:cover; }
 .footer-name { font-family:"Lora",serif; font-weight:600; font-size:0.9rem; }
 .footer-tagline { font-size:0.77rem; color:var(--ink-faint); margin-left:0.5rem; }
-.footer-links { display:flex; gap:1.4rem; }
+.footer-links { display:flex; flex-wrap:wrap; gap:0.5rem 1.4rem; }
 .footer-links a { font-size:0.79rem; color:var(--ink-muted); text-decoration:none; }
 .footer-links a:hover { color:var(--accent); }
+@media (max-width:640px) {
+  footer { padding:2rem 1.25rem; }
+  .footer-inner { flex-direction:column; align-items:flex-start; }
+  .footer-links { gap:0.4rem 1rem; }
+}
 """
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'

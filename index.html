@@ -572,6 +572,7 @@
       overflow: hidden;
       z-index: 1;
       border-radius: 7%;
+      transform: translateZ(0); /* promote the clip so the moving screenshot composites on the GPU */
       background: #111;
     }
 
@@ -1367,6 +1368,7 @@
 
     .footer-links {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.4rem;
     }
 
@@ -2061,8 +2063,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 // ─── CARD TOUR: phone scrollytelling ─────────────────────────────────────────
-// Screenshot position is interpolated continuously from scroll position so the
-// phone tracks the user's scroll rather than jumping between discrete targets.
+// Geometry (step centres, section bounds, clip size) is measured once and
+// cached — the scroll path does no layout reads on desktop. The screenshot
+// eases toward its target in a rAF loop (damped follower), so discrete wheel
+// ticks produce smooth motion instead of stepped jumps.
 (function() {
   var IMG_ASPECT = 6078 / 1080;
 
@@ -2073,102 +2077,140 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!section || !screenshot || !stepEls.length) return;
 
-  var phoneSticky = section.querySelector('.tour-phone-sticky');
-
-  function updateCardTop() {
-    if (window.innerWidth > 800 || !phoneSticky) return;
-    var r = phoneSticky.getBoundingClientRect();
-    if (r.top > 100) return;
-    section.style.setProperty('--card-top', Math.round(r.bottom + 12) + 'px');
-  }
-  window.addEventListener('resize', updateCardTop, { passive: true });
+  var phoneSticky  = section.querySelector('.tour-phone-sticky');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var scrollTargets = stepEls.map(function(el) {
     return parseFloat(el.dataset.scroll || '0') / 100;
   });
 
-  function getMaxScroll() {
-    return Math.max(0, screenClip.offsetWidth * IMG_ASPECT - screenClip.offsetHeight);
+  // ── Cached geometry (recomputed on resize/load, never during scroll) ──────
+  var centres = [], maxScroll = 0, sectionTop = 0, sectionBottom = 0,
+      stepsTopAbs = 0, stepsBotAbs = 0;
+
+  function measure() {
+    var sy = window.scrollY;
+    centres = stepEls.map(function(el) {
+      var r = el.getBoundingClientRect();
+      return sy + r.top + r.height / 2;
+    });
+    var first = stepEls[0].getBoundingClientRect();
+    var last  = stepEls[stepEls.length - 1].getBoundingClientRect();
+    stepsTopAbs   = sy + first.top;
+    stepsBotAbs   = sy + last.bottom;
+    var sr = section.getBoundingClientRect();
+    sectionTop    = sy + sr.top;
+    sectionBottom = sy + sr.bottom;
+    maxScroll = Math.max(0, screenClip.offsetWidth * IMG_ASPECT - screenClip.offsetHeight);
   }
 
-  // Interpolate screenshot pct smoothly between step targets based on scroll.
-  // As viewport centre moves from step A's centre toward step B's centre,
-  // the pct linearly tracks from A's target to B's target — no discrete jump.
-  function getInterpolatedPct(vpCenter) {
-    var prevIdx = 0;
-    for (var i = 0; i < stepEls.length; i++) {
-      var r = stepEls[i].getBoundingClientRect();
-      if (r.top + r.height / 2 <= vpCenter) prevIdx = i;
+  // ── Damped follower: screenshot eases toward targetY each frame ───────────
+  var currentY = 0, targetY = 0, rafId = null;
+
+  function applyTransform() {
+    screenshot.style.transform = 'translate3d(0,' + currentY.toFixed(2) + 'px,0)';
+  }
+
+  function tick() {
+    var diff = targetY - currentY;
+    if (Math.abs(diff) < 0.5) {
+      currentY = targetY;
+      applyTransform();
+      rafId = null;
+      return;
     }
-    var nextIdx = Math.min(prevIdx + 1, stepEls.length - 1);
-    if (prevIdx === nextIdx) return scrollTargets[prevIdx];
-
-    var prevCenter = (function() { var r = stepEls[prevIdx].getBoundingClientRect(); return r.top + r.height / 2; })();
-    var nextCenter = (function() { var r = stepEls[nextIdx].getBoundingClientRect(); return r.top + r.height / 2; })();
-    var t = Math.max(0, Math.min(1, (vpCenter - prevCenter) / (nextCenter - prevCenter)));
-    // Ease the interpolation so it lingers near each step's target
-    t = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    return scrollTargets[prevIdx] + t * (scrollTargets[nextIdx] - scrollTargets[prevIdx]);
+    currentY += diff * 0.16;
+    applyTransform();
+    rafId = requestAnimationFrame(tick);
   }
 
+  function startAnim(jump) {
+    if (jump || reduceMotion) {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      currentY = targetY;
+      applyTransform();
+      return;
+    }
+    if (!rafId) rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Per-scroll update: pure arithmetic on cached geometry ──────────────────
   var lastActiveIndex = -1;
-  var ticking = false;
 
-  function findActiveStep() {
-    var isMobile = window.innerWidth <= 800;
-    var vpCenter = window.innerHeight / 2;
+  function update(jump) {
+    var sy = window.scrollY;
+    // Skip all work while the tour is far off-screen
+    if (sy + window.innerHeight < sectionTop - 300 || sy > sectionBottom + 300) return;
 
-    // Nearest step to viewport centre = active
+    var isMobile    = window.innerWidth <= 800;
+    var vpCenterAbs = sy + window.innerHeight / 2;
+
+    // Active step = nearest cached centre to viewport centre
     var bestIdx = 0, bestDist = Infinity;
-    for (var i = 0; i < stepEls.length; i++) {
-      var r = stepEls[i].getBoundingClientRect();
-      var d = Math.abs(r.top + r.height / 2 - vpCenter);
+    for (var i = 0; i < centres.length; i++) {
+      var d = Math.abs(centres[i] - vpCenterAbs);
       if (d < bestDist) { bestDist = d; bestIdx = i; }
     }
 
-    if (isMobile) {
-      updateCardTop();
-      var psRect = phoneSticky ? phoneSticky.getBoundingClientRect() : { top: 999, bottom: 600 };
+    if (isMobile && phoneSticky) {
+      // The sticky phone's position depends on scroll — this is the one
+      // unavoidable layout read on the mobile path.
+      var psRect = phoneSticky.getBoundingClientRect();
       var phoneStuck = psRect.top <= 100;
-      var firstTop  = stepEls[0].getBoundingClientRect().top;
-      var lastBot   = stepEls[stepEls.length - 1].getBoundingClientRect().bottom;
-      var inZone    = phoneStuck && firstTop < psRect.bottom + 150 && lastBot > psRect.bottom + 100;
-      section.classList.toggle('tour-visible', inZone);
-
-      if (inZone && bestIdx !== lastActiveIndex) {
-        lastActiveIndex = bestIdx;
-        stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
+      if (phoneStuck) {
+        section.style.setProperty('--card-top', Math.round(psRect.bottom + 12) + 'px');
       }
+      var inZone = phoneStuck &&
+        (stepsTopAbs - sy) < psRect.bottom + 150 &&
+        (stepsBotAbs - sy) > psRect.bottom + 100;
+      section.classList.toggle('tour-visible', inZone);
+      if (!inZone) bestIdx = lastActiveIndex;
     }
 
-    var bestRect = stepEls[bestIdx].getBoundingClientRect();
-    if (bestRect.bottom < 0 || bestRect.top > window.innerHeight) return;
-
-    if (!isMobile && bestIdx !== lastActiveIndex) {
+    if (bestIdx !== lastActiveIndex && bestIdx >= 0) {
       lastActiveIndex = bestIdx;
       stepEls.forEach(function(el, i) { el.classList.toggle('active', i === bestIdx); });
     }
 
-    // Continuously interpolated screenshot position — no CSS transition needed
-    var pct = getInterpolatedPct(vpCenter);
-    screenshot.style.transition = 'none';
-    screenshot.style.transform  = 'translateY(' + (-(pct * getMaxScroll())) + 'px)';
+    // Interpolate the screenshot target between adjacent step targets.
+    // Gentle smoothstep only — the damped follower supplies the fluidity.
+    var prevIdx = 0;
+    for (var j = 0; j < centres.length; j++) {
+      if (centres[j] <= vpCenterAbs) prevIdx = j;
+    }
+    var nextIdx = Math.min(prevIdx + 1, centres.length - 1);
+    var pct;
+    if (prevIdx === nextIdx) {
+      pct = scrollTargets[prevIdx];
+    } else {
+      var t = (vpCenterAbs - centres[prevIdx]) / (centres[nextIdx] - centres[prevIdx]);
+      t = Math.max(0, Math.min(1, t));
+      t = t * t * (3 - 2 * t);
+      pct = scrollTargets[prevIdx] + t * (scrollTargets[nextIdx] - scrollTargets[prevIdx]);
+    }
+    targetY = -(pct * maxScroll);
+    startAnim(jump);
   }
 
+  var scrollQueued = false;
   function onScroll() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function() { findActiveStep(); ticking = false; });
+    if (scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(function() { update(false); scrollQueued = false; });
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', function() {
     lastActiveIndex = -1;
     section.classList.remove('tour-visible');
-    onScroll();
+    measure();
+    update(true);
   }, { passive: true });
+  // Re-measure once everything (images, fonts) has loaded and shifted layout
+  window.addEventListener('load', function() { measure(); update(true); });
 
-  findActiveStep();
+  measure();
+  update(true);
 })();
 </script>
 </body>
