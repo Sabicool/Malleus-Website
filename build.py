@@ -1360,7 +1360,7 @@ def build_jobs_page(logo_name: str) -> str:
         cards = """
   <div class="jobs-empty">
     There are no open positions right now — but we're always happy to hear from keen
-    contributors. Email <a href="mailto:alex.lewis@malleus.org.au">alex.lewis@malleus.org.au</a>
+    contributors. Email <a href="mailto:secretary@malleus.org.au">secretary@malleus.org.au</a>
     to register your interest for the next round, or just start
     <a href="submission-guidelines.html">suggesting cards</a> — most of our team started that way.
   </div>"""
@@ -1394,7 +1394,7 @@ def build_jobs_page(logo_name: str) -> str:
   <div class="notion-callout notion-callout-blue" style="max-width:820px;">
     <span class="callout-icon">📨</span>
     <div>Questions about a role, or want to apply outside the formal election period?
-    Email our Secretary at <a href="mailto:alex.lewis@malleus.org.au">alex.lewis@malleus.org.au</a>
+    Email our Secretary at <a href="mailto:secretary@malleus.org.au">secretary@malleus.org.au</a>
     with your name, uni or work status (e.g. PGY1), and location. You can see the current
     committee on our <a href="about.html">About page</a>.</div>
   </div>
