@@ -57,6 +57,68 @@ CAL_EMBED = (f"https://calendar.google.com/calendar/embed?src={CAL_SRC}"
 CAL_PUBLIC    = f"https://calendar.google.com/calendar/embed?src={CAL_SRC}&ctz=Australia%2FMelbourne"
 CAL_ADD_GOOGLE = f"https://calendar.google.com/calendar/render?cid={CAL_SRC}"
 CAL_WEBCAL = (f"webcal://calendar.google.com/calendar/ical/{CAL_SRC}/public/basic.ics")
+CAL_ICS    = (f"https://calendar.google.com/calendar/ical/{CAL_SRC}/public/basic.ics")
+CAL_TZ     = "Australia/Melbourne"
+
+
+def _event_type(summary: str):
+    """Map a calendar summary to a clean card title, short tag and colour class."""
+    s = summary.lower()
+    if "general committee" in s:
+        return ("General Committee Meeting", "General Committee", "type-general")
+    if "maintainer" in s:
+        return ("Maintainer Subcommittee Meeting", "Maintainers", "type-maintainer")
+    if "executive" in s:
+        return ("Executive Committee Meeting", "Executive", "type-exec")
+    if "annual general meeting" in s or "agm" in s:
+        return (summary, "AGM", "type-special")
+    if "induction" in s:
+        return (summary, "Induction", "type-special")
+    # Strip the "Malleus"/"Project Malleus" prefix for anything else
+    clean = re.sub(r'^(Project\s+)?Malleus\s+(Fortnightly\s+|Monthly\s+|Weekly\s+)?', '', summary).strip()
+    return (clean or summary, "Meeting", "type-special")
+
+
+def fetch_calendar_events(max_events: int = 10, horizon_days: int = 150) -> list:
+    """Fetch the public iCal feed and expand the next upcoming occurrences.
+    Uses recurring_ical_events so recurrence rules, modified instances (the many
+    RECURRENCE-ID overrides), exclusions and timezones are all handled correctly.
+    Returns [] on any failure so the Events page falls back gracefully."""
+    try:
+        import datetime as _dt
+        from zoneinfo import ZoneInfo
+        import icalendar, recurring_ical_events
+        r = requests.get(CAL_ICS, timeout=30)
+        r.raise_for_status()
+        cal = icalendar.Calendar.from_ical(r.content)
+        tz  = ZoneInfo(CAL_TZ)
+        today = _dt.date.today()
+        occ = recurring_ical_events.of(cal).between(today, today + _dt.timedelta(days=horizon_days))
+
+        def to_local(d):
+            if isinstance(d, _dt.datetime):
+                if d.tzinfo is None:
+                    d = d.replace(tzinfo=tz)
+                return d.astimezone(tz), False
+            return _dt.datetime(d.year, d.month, d.day, tzinfo=tz), True
+
+        rows = []
+        for e in occ:
+            start, all_day = to_local(e["DTSTART"].dt)
+            end_prop = e.get("DTEND")
+            end = to_local(end_prop.dt)[0] if end_prop else None
+            title, tag, cls = _event_type(str(e.get("SUMMARY", "Meeting")))
+            rows.append({
+                "start": start, "end": end, "all_day": all_day,
+                "title": title, "tag": tag, "cls": cls,
+                "meet": str(e.get("X-GOOGLE-CONFERENCE", "")) or "",
+            })
+        rows.sort(key=lambda x: x["start"])
+        print(f"  Loaded {len(rows)} upcoming calendar occurrences.")
+        return rows[:max_events]
+    except Exception as e:
+        print(f"    ⚠️  Calendar fetch/parse failed ({e}) — Events page will use fallback.")
+        return []
 
 NOTION_HEADERS = {
     "Authorization":  f"Bearer {NOTION_TOKEN}",
@@ -930,12 +992,43 @@ a { color:var(--accent); }
   border-radius:var(--radius-sm); font-size:0.9rem; font-weight:500;
   border:1px solid var(--border); transition:border-color 0.2s, color 0.2s; }
 .btn-ghost:hover { border-color:var(--accent-mid); color:var(--accent) !important; }
-.cal-embed-frame { background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm);
-  max-width:920px; }
-.cal-embed-frame iframe { display:block; width:100%; height:640px; border:0; }
-.cal-tz-note { font-size:0.8rem; color:var(--ink-faint); margin-top:0.75rem; max-width:920px; }
-@media (max-width:640px) { .cal-embed-frame iframe { height:520px; } }
+.cal-tz-note { font-size:0.8rem; color:var(--ink-faint); margin-top:1.25rem; max-width:920px; }
+.events-month { font-family:"Lora",serif; font-size:1.05rem; font-weight:600;
+  color:var(--ink-muted); margin:1.75rem 0 0.9rem; padding-bottom:0.4rem;
+  border-bottom:1px solid var(--border-light); max-width:920px; }
+.events-month:first-of-type { margin-top:0; }
+.events-list { display:flex; flex-direction:column; gap:0.75rem; max-width:920px; }
+.event-row { display:flex; align-items:center; gap:1.25rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:1.1rem 1.4rem; transition:border-color 0.2s, box-shadow 0.2s; }
+.event-row:hover { border-color:var(--accent-mid); box-shadow:var(--shadow-sm); }
+.event-date { flex-shrink:0; width:58px; text-align:center; line-height:1.1;
+  border-right:1px solid var(--border-light); padding-right:1.1rem; }
+.event-dow { font-size:0.68rem; font-weight:600; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--accent); }
+.event-day { font-family:"Lora",serif; font-size:1.6rem; font-weight:600; color:var(--ink); }
+.event-info { flex:1; min-width:0; }
+.event-tag { display:inline-block; font-size:0.64rem; font-weight:500;
+  letter-spacing:0.08em; text-transform:uppercase; padding:0.15rem 0.6rem;
+  border-radius:2rem; margin-bottom:0.4rem; }
+.type-general  { color:#1B4E7A; background:#D4E5F5; }
+.type-maintainer { color:#5B3A91; background:#E9E0F7; }
+.type-exec     { color:#8A5A15; background:#FBEFD5; }
+.type-special  { color:#1A6B45; background:#DCF2E6; }
+.event-title { font-family:"Lora",serif; font-size:1.05rem; font-weight:600;
+  color:var(--ink); }
+.event-time { font-size:0.85rem; color:var(--ink-muted); margin-top:0.15rem; }
+.event-join { flex-shrink:0; display:inline-flex; align-items:center; gap:0.35rem;
+  font-size:0.85rem; font-weight:500; color:var(--accent) !important;
+  text-decoration:none; white-space:nowrap; }
+.event-join:hover { color:var(--accent-dark) !important; }
+@media (max-width:600px) {
+  .event-row { flex-wrap:wrap; gap:0.75rem 1rem; padding:1rem 1.2rem; }
+  .event-date { width:auto; border-right:none; border-bottom:none; padding-right:0;
+    display:flex; align-items:baseline; gap:0.4rem; }
+  .event-day { font-size:1.15rem; }
+  .event-join { width:100%; }
+}
 
 /* ABOUT */
 .about-prose { max-width:760px; color:var(--ink-muted); font-size:0.97rem;
@@ -1585,6 +1678,54 @@ def build_events_page(logo_name: str) -> str:
       <p>{escape(d)}</p>
     </div>""" for c, t, d in types)
 
+    # Native upcoming-meetings list, grouped by month
+    events = fetch_calendar_events()
+    if events:
+        def fmt_time(ev):
+            if ev["all_day"]:
+                return "All day"
+            s = ev["start"].strftime("%-I:%M%p").lower().lstrip("0")
+            if ev["end"]:
+                e = ev["end"].strftime("%-I:%M%p").lower().lstrip("0")
+                # drop am/pm on start if it matches end (e.g. 7:00–7:30pm)
+                if s[-2:] == e[-2:]:
+                    s = s[:-2]
+                rng = f"{s} – {e}"
+            else:
+                rng = s
+            return f"{rng} {ev['start'].strftime('%Z')}"
+
+        def render_row(ev):
+            join = (f'<a class="event-join" href="{escape(ev["meet"])}" target="_blank" rel="noopener">Join via Meet &rarr;</a>'
+                    if ev["meet"] else "")
+            return f"""
+    <div class="event-row">
+      <div class="event-date"><div class="event-dow">{ev['start'].strftime('%a')}</div><div class="event-day">{ev['start'].strftime('%-d')}</div></div>
+      <div class="event-info">
+        <span class="event-tag {ev['cls']}">{escape(ev['tag'])}</span>
+        <div class="event-title">{escape(ev['title'])}</div>
+        <div class="event-time">{escape(fmt_time(ev))}</div>
+      </div>
+      {join}
+    </div>"""
+
+        # Group consecutive events by month heading
+        from itertools import groupby
+        groups = groupby(events, key=lambda ev: ev["start"].strftime("%B %Y"))
+        sections = []
+        for month, evs in groups:
+            rows = "".join(render_row(ev) for ev in evs)
+            sections.append(f'<div class="events-month">{escape(month)}</div>'
+                            f'<div class="events-list">{rows}</div>')
+        events_html = "".join(sections)
+    else:
+        events_html = f"""
+  <div class="jobs-empty" style="max-width:920px;">
+    We couldn't load the upcoming meetings just now. Add the calendar with the buttons
+    above, or <a href="{CAL_PUBLIC}" target="_blank" rel="noopener">open the full calendar</a>
+    to see what's coming up.
+  </div>"""
+
     body = f"""
 <div class="page-header">
   <div class="page-header-inner">
@@ -1607,12 +1748,10 @@ def build_events_page(logo_name: str) -> str:
     <a class="btn-ghost" href="{CAL_WEBCAL}">Subscribe (Apple / Outlook)</a>
     <a class="btn-ghost" href="{CAL_PUBLIC}" target="_blank" rel="noopener">Open full calendar</a>
   </div>
-  <div class="cal-embed-frame">
-    <iframe src="{CAL_EMBED}" title="Malleus public meetings calendar" loading="lazy"></iframe>
-  </div>
+  {events_html}
   <p class="cal-tz-note">
     Times shown in Australian Eastern Time (Melbourne). Subscribe with the buttons above
-    to see meetings in your own timezone, with the Google Meet link attached to each event.
+    to add the meetings to your own calendar in your timezone, each with its Google Meet link.
   </p>
 </div>"""
     return page_shell("Events & Meetings", logo_name, "events", body, description=(

@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Daily rebuild so the Events page picks up calendar changes between pushes
+    - cron: "17 18 * * *"
 
 permissions:
   contents: read
@@ -25,7 +28,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests icalendar recurring-ical-events tzdata
 
       - name: Build site
         env:
