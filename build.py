@@ -47,6 +47,17 @@ NOTION_PAGES = {
 JOBS_DB_ID     = "3405964e68a4807db351f96c76e93bf7"   # Project Malleus Positions
 CONTACTS_DB_ID = "2d75964e68a4810996cbed680205b5a5"   # Committee contacts (About page)
 
+# Public meetings calendar (Events page). The live Google embed is the source of
+# truth — it handles recurrence, overrides, timezones and stays current without
+# a rebuild. Subscribe buttons let people add it to their own calendar app.
+CAL_SRC   = "c_55f173a46dbe680ee9d450bd96b805682df5f0be27c39ad0e719f52bc3e376d2%40group.calendar.google.com"
+CAL_EMBED = (f"https://calendar.google.com/calendar/embed?src={CAL_SRC}"
+             "&ctz=Australia%2FMelbourne&mode=AGENDA&showTitle=0&showPrint=0"
+             "&showCalendars=0&showTz=0&color=%232E6DA4")
+CAL_PUBLIC    = f"https://calendar.google.com/calendar/embed?src={CAL_SRC}&ctz=Australia%2FMelbourne"
+CAL_ADD_GOOGLE = f"https://calendar.google.com/calendar/render?cid={CAL_SRC}"
+CAL_WEBCAL = (f"webcal://calendar.google.com/calendar/ical/{CAL_SRC}/public/basic.ics")
+
 NOTION_HEADERS = {
     "Authorization":  f"Bearer {NOTION_TOKEN}",
     "Notion-Version": "2022-06-28",
@@ -900,6 +911,32 @@ a { color:var(--accent); }
   border-radius:var(--radius-lg); padding:2rem; max-width:820px;
   color:var(--ink-muted); font-size:0.95rem; }
 
+/* EVENTS */
+.events-types { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1rem; max-width:920px; margin:0 0 2.5rem; }
+.event-type { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:1.5rem; }
+.event-type-cadence { display:inline-block; font-size:0.68rem; font-weight:500;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--accent);
+  background:var(--accent-light); padding:0.22rem 0.7rem; border-radius:2rem;
+  margin-bottom:0.9rem; }
+.event-type h3 { font-family:"Lora",serif; font-size:1.15rem; font-weight:600;
+  color:var(--ink); margin-bottom:0.5rem; }
+.event-type p { font-size:0.9rem; color:var(--ink-muted); line-height:1.65; }
+.cal-subscribe { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;
+  margin-bottom:1.5rem; }
+.btn-ghost { display:inline-flex; align-items:center; gap:0.4rem; background:var(--surface);
+  color:var(--ink) !important; text-decoration:none; padding:0.6rem 1.3rem;
+  border-radius:var(--radius-sm); font-size:0.9rem; font-weight:500;
+  border:1px solid var(--border); transition:border-color 0.2s, color 0.2s; }
+.btn-ghost:hover { border-color:var(--accent-mid); color:var(--accent) !important; }
+.cal-embed-frame { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm);
+  max-width:920px; }
+.cal-embed-frame iframe { display:block; width:100%; height:640px; border:0; }
+.cal-tz-note { font-size:0.8rem; color:var(--ink-faint); margin-top:0.75rem; max-width:920px; }
+@media (max-width:640px) { .cal-embed-frame iframe { height:520px; } }
+
 /* ABOUT */
 .about-prose { max-width:760px; color:var(--ink-muted); font-size:0.97rem;
   line-height:1.75; }
@@ -1134,10 +1171,11 @@ def footer_html(logo_name: str) -> str:
       </div>
       <div class="footer-col">
         <span class="footer-col-title">Community</span>
+        <a href="events.html">Events &amp; Meetings</a>
         <a href="https://discord.gg/4WqgJzjVyH" target="_blank" rel="noopener">Discord</a>
-        <a href="https://www.facebook.com/MalleusCM" target="_blank" rel="noopener">Facebook</a>
         <a href="https://www.instagram.com/projectmalleus" target="_blank" rel="noopener">Instagram</a>
         <a href="https://www.youtube.com/@MalleusClinicalMedicine" target="_blank" rel="noopener">YouTube</a>
+        <a href="https://www.facebook.com/MalleusCM" target="_blank" rel="noopener">Facebook</a>
         <a href="https://community.ankihub.net/tags/c/ankihub-decks/updates/31/updates-malleus-clinical-medicine-aunz-stapedius/2338" target="_blank" rel="noopener">Newsletter</a>
       </div>
       <div class="footer-col">
@@ -1501,9 +1539,13 @@ def build_about_page(logo_name: str) -> str:
     <p>
       Malleus runs on volunteers, and there's always room for more — from committee
       positions to maintainers and content reviewers. Open roles are listed on our
-      jobs board and update automatically.
+      jobs board, and our meetings are public so you can see how the project works
+      before you commit.
     </p>
-    <a class="btn-sponsor" href="jobs-board.html">View Open Positions &rarr;</a>
+    <div class="cal-subscribe" style="margin-bottom:0;">
+      <a class="btn-sponsor" href="jobs-board.html">View Open Positions &rarr;</a>
+      <a class="btn-ghost" href="events.html">Join a Meeting</a>
+    </div>
   </div>
 
   <h2 class="about-h" id="contact">Get in Touch</h2>
@@ -1520,6 +1562,62 @@ def build_about_page(logo_name: str) -> str:
     return page_shell("About Us", logo_name, "about", body, description=(
         "Project Malleus is a volunteer-run, not-for-profit student association building "
         "the open-source clinical medicine Anki deck for Australia and New Zealand."))
+
+
+def build_events_page(logo_name: str) -> str:
+    types = [
+        ("Fortnightly", "General Committee Meetings",
+         "Our main public meeting. All members are welcome — including non-elected "
+         "general members — to hear updates from every portfolio: executive, maintainers, "
+         "content reviewers, IT, university reps and AMSA liaisons."),
+        ("Fortnightly", "Maintainer Subcommittee Meetings",
+         "Where the deck gets built. Maintainers discuss content, tagging and review "
+         "workflow — and anyone curious about contributing is welcome to sit in, "
+         "including non-maintainers."),
+        ("Monthly", "Executive Committee Meetings",
+         "The executive team meets monthly to steer the project's direction, "
+         "partnerships and operations."),
+    ]
+    type_cards = "".join(f"""
+    <div class="event-type">
+      <span class="event-type-cadence">{escape(c)}</span>
+      <h3>{escape(t)}</h3>
+      <p>{escape(d)}</p>
+    </div>""" for c, t, d in types)
+
+    body = f"""
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-eyebrow">Public Meetings</div>
+    <h1 class="page-title">Events &amp; Meetings</h1>
+    <p class="page-subtitle">
+      Malleus runs in the open. Our committee and maintainer meetings are public —
+      anyone is welcome to join, listen in, and get involved. Meetings are held over
+      Google Meet; the live calendar below always shows the next sessions.
+    </p>
+  </div>
+</div>
+<div class="page-content">
+  <div class="events-types">{type_cards}
+  </div>
+
+  <h2 class="about-h" style="margin-top:0;">Upcoming Meetings</h2>
+  <div class="cal-subscribe">
+    <a class="btn-sponsor" href="{CAL_ADD_GOOGLE}" target="_blank" rel="noopener">Add to Google Calendar &rarr;</a>
+    <a class="btn-ghost" href="{CAL_WEBCAL}">Subscribe (Apple / Outlook)</a>
+    <a class="btn-ghost" href="{CAL_PUBLIC}" target="_blank" rel="noopener">Open full calendar</a>
+  </div>
+  <div class="cal-embed-frame">
+    <iframe src="{CAL_EMBED}" title="Malleus public meetings calendar" loading="lazy"></iframe>
+  </div>
+  <p class="cal-tz-note">
+    Times shown in Australian Eastern Time (Melbourne). Subscribe with the buttons above
+    to see meetings in your own timezone, with the Google Meet link attached to each event.
+  </p>
+</div>"""
+    return page_shell("Events & Meetings", logo_name, "events", body, description=(
+        "Project Malleus meetings are public — join our fortnightly committee and "
+        "maintainer meetings. See the live calendar and subscribe."))
 
 
 def build_404_page(logo_name: str) -> str:
@@ -1552,7 +1650,7 @@ def write_seo_files():
     from datetime import date
     today = date.today().isoformat()
     pages = ["", "getting-started.html", "submission-guidelines.html",
-             "checklist.html", "about.html", "jobs-board.html",
+             "checklist.html", "about.html", "events.html", "jobs-board.html",
              "sponsors.html", "register.html", "terms-of-use.html"]
     urls = "".join(
         f"<url><loc>{SITE_URL}{p}</loc><lastmod>{today}</lastmod></url>" for p in pages)
@@ -1745,6 +1843,9 @@ def main():
     print("📄  Generating Jobs Board page…")
     html = build_jobs_page(logo_name)
     (DIST_DIR / "jobs-board.html").write_text(html, encoding="utf-8")
+
+    print("📄  Generating Events page…")
+    (DIST_DIR / "events.html").write_text(build_events_page(logo_name), encoding="utf-8")
 
     print("📄  Generating About page…")
     html = build_about_page(logo_name)
