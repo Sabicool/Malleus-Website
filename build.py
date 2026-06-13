@@ -622,7 +622,8 @@ SHARED_CSS = """
 }
 html { scroll-behavior: smooth; }
 body { font-family: "Outfit", sans-serif; background: var(--bg); color: var(--ink);
-  line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased; }
+  line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; overflow-x: clip; }
 
 /* GRAIN OVERLAY (matches homepage) */
 body::after { content: ""; position: fixed; inset: 0; z-index: 9999;
@@ -706,12 +707,14 @@ nav { position: fixed; top:0; left:0; right:0; z-index:100;
 .notion-callout-red   { background:#FDEDEC; border-color:#E74C3C; }
 .notion-callout-green { background:#EAFAF1; border-color:#27AE60; }
 .callout-icon { font-size:1.2rem; flex-shrink:0; line-height:1.5; }
+.notion-callout > div { min-width:0; }
 .notion-code { background:#1E2B3C; color:#E8EFF5; padding:1.2rem 1.5rem;
   border-radius:8px; overflow-x:auto; font-size:0.83rem; line-height:1.6;
   margin:1.25rem 0; }
 .notion-code code { font-family:"Fira Code","Consolas",monospace; }
 code { background:#E8EFF5; color:var(--accent-dark); padding:0.1em 0.35em;
-  border-radius:3px; font-size:0.88em; font-family:"Fira Code","Consolas",monospace; }
+  border-radius:3px; font-size:0.88em; font-family:"Fira Code","Consolas",monospace;
+  overflow-wrap:anywhere; }
 code.code-copy { cursor:pointer; position:relative; transition:background 0.2s; }
 code.code-copy:hover { background:#D8E6F3; }
 code.code-copy.copied::after { content:"Copied \\2713"; position:absolute; top:-1.9em;
@@ -754,7 +757,18 @@ code.code-copy.copied::after { content:"Copied \\2713"; position:absolute; top:-
 .notion-toggle summary.notion-h2 { font-family:"Lora",serif; font-size:1.3rem; font-weight:600; }
 .notion-toggle summary.notion-h3 { font-size:1.05rem; font-weight:600; }
 .toggle-body { padding:0.75rem 0 0; }
-.notion-table-wrap { overflow-x:auto; margin:1.5rem 0; }
+/* Edge shadows hint that the table scrolls; the local-attached cover
+   gradients ride along with the content and hide them at either end. */
+.notion-table-wrap { overflow-x:auto; margin:1.5rem 0;
+  background:
+    linear-gradient(to right, var(--bg) 30%, transparent),
+    linear-gradient(to left, var(--bg) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(27,78,122,0.18), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgba(27,78,122,0.18), transparent);
+  background-position:left center, right center, left center, right center;
+  background-size:40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-repeat:no-repeat;
+  background-attachment:local, local, scroll, scroll; }
 .notion-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
 .notion-table th, .notion-table td { border:1px solid var(--border);
   padding:0.6rem 1rem; text-align:left; }
