@@ -64,7 +64,8 @@ NOTION_HEADERS = {
     "Content-Type":   "application/json",
 }
 
-SITE_URL   = "https://sabicool.github.io/Malleus-Website/"
+SITE_URL   = "https://malleus.org.au/"
+SITE_DOMAIN = "malleus.org.au"   # written to dist/CNAME so GitHub Pages keeps the custom domain
 ASSETS_DIR = DIST_DIR / "assets"
 
 
@@ -1207,6 +1208,7 @@ def page_shell(title: str, logo_name: str, active: str, body: str,
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} — Malleus Clinical Medicine</title>
   <meta name="description" content="{escape(description)}">
+  <link rel="canonical" href="{page_url}">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta property="og:type" content="website">
@@ -1660,6 +1662,8 @@ def write_seo_files():
         encoding="utf-8")
     (DIST_DIR / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+    # GitHub Pages reads dist/CNAME to keep the custom domain across deploys
+    (DIST_DIR / "CNAME").write_text(SITE_DOMAIN + "\n", encoding="utf-8")
 
 
 def build_register_page(form_ids: dict, logo_name: str) -> str:
