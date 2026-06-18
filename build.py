@@ -65,7 +65,7 @@ NOTION_HEADERS = {
 }
 
 SITE_URL   = "https://malleus.org.au/"
-SITE_DOMAIN = "malleus.org.au"   # written to dist/CNAME so GitHub Pages keeps the custom domain
+SITE_DOMAIN = "malleus.org.au"   # written to dist/CNAME for static hosts; live site is on Netlify (domain configured in its dashboard)
 ASSETS_DIR = DIST_DIR / "assets"
 
 
@@ -1642,8 +1642,9 @@ def build_404_page(logo_name: str) -> str:
 </div>"""
     html = page_shell("Page Not Found", logo_name, "", body,
                       description="Page not found — Malleus Clinical Medicine.")
-    # GitHub Pages serves 404.html for any missing path, including nested ones,
-    # so relative links need an explicit base to keep resolving to the site root.
+    # Static hosts (Netlify, GitHub Pages) serve 404.html for any missing path,
+    # including nested ones, so relative links need an explicit base to keep
+    # resolving to the site root.
     return html.replace("<head>", f'<head>\n  <base href="{SITE_URL}">', 1)
 
 
@@ -1662,7 +1663,8 @@ def write_seo_files():
         encoding="utf-8")
     (DIST_DIR / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
-    # GitHub Pages reads dist/CNAME to keep the custom domain across deploys
+    # dist/CNAME pins the custom domain on static hosts like GitHub Pages; the
+    # live site is on Netlify (domain set in the dashboard), where the file is inert
     (DIST_DIR / "CNAME").write_text(SITE_DOMAIN + "\n", encoding="utf-8")
 
 
