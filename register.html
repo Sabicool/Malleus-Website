@@ -367,10 +367,13 @@
 <div class="page-content">
 
   <div class="notice">
-    <strong>What happens after you register?</strong> Within 14 days you'll receive a
-    <strong>your.name@malleus.org.au</strong> email address, granting you voting rights at AGMs
-    and access to fortnightly General Committee meetings. There are no formal responsibilities &mdash;
-    just community membership. You can opt out at any time by emailing
+    <strong>What happens after you register?</strong> Your name and email are added to a secure
+    database used only to send community updates. You'll get voting rights at AGMs and can attend
+    the fortnightly General Committee meetings. There are no formal responsibilities &mdash;
+    just community membership. Want to become a Maintainer? Email
+    <a href="mailto:it@malleus.org.au">it@malleus.org.au</a> to request a dedicated
+    @malleus.org.au address (these are no longer created automatically). You can opt out and
+    delete your data at any time by emailing
     <a href="mailto:admin@malleus.org.au">admin@malleus.org.au</a>.
   </div>
 
@@ -437,6 +440,23 @@
         </div>
       </div>
 
+      <!-- Country -->
+      <div class="form-group full">
+        <label class="form-label">What country are you working/studying in at the moment? <span class="req">*</span></label>
+        <div class="radio-group" id="country-group">
+          <label class="radio-item"><input type="radio" name="COUNTRY" value="Australia" required>
+            <span>Australia</span></label>
+          <label class="radio-item"><input type="radio" name="COUNTRY" value="New Zealand">
+            <span>New Zealand</span></label>
+          <label class="radio-item"><input type="radio" name="COUNTRY" value="__other__">
+            <span>Other</span></label>
+        </div>
+        <div class="other-wrap" id="country-other-wrap" style="display:none">
+          <input class="form-input" id="f-country-other" type="text" name="COUNTRY_OTHER"
+            placeholder="Which country?" autocomplete="country-name">
+        </div>
+      </div>
+
       <hr class="divider full">
 
       <!-- Consent -->
@@ -477,9 +497,8 @@
     </div>
     <h3>Registration received</h3>
     <p>
-      Thanks for joining Malleus.<br>
-      You'll receive your <strong>your.name@malleus.org.au</strong> address within 14 days.<br>
-      Keep an eye on your inbox.
+      Thanks for joining Malleus &mdash; you're now a general member.<br>
+      If you opted in, project updates will arrive in your inbox.
     </p>
   </div>
 
@@ -553,16 +572,19 @@ const ENTRY = {
   lname:   "entry.1126515459",
   ankihub: "entry.1273477163",
   status:  "entry.1531406735",
+  country: "entry.367269143",
   consent: "entry.1298975064",
 };
 
 const FORM_POST = "https://docs.google.com/forms/d/e/1FAIpQLSd6G7DAgEeKjS-sXuX-Mvzfo5BGWaEpRZ9n3Sf2e4E1be7kXw/formResponse";
 
-// "Other" field toggle
-document.querySelectorAll('input[name="STATUS"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.getElementById('other-wrap').style.display =
-      r.value === '__other__' && r.checked ? 'block' : 'none';
+// "Other" field toggles
+[['STATUS', 'other-wrap'], ['COUNTRY', 'country-other-wrap']].forEach(([name, wrapId]) => {
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+    r.addEventListener('change', () => {
+      document.getElementById(wrapId).style.display =
+        r.value === '__other__' && r.checked ? 'block' : 'none';
+    });
   });
 });
 
@@ -572,14 +594,18 @@ function validate() {
   const fname   = document.getElementById('f-fname').value.trim();
   const lname   = document.getElementById('f-lname').value.trim();
   const status  = document.querySelector('input[name="STATUS"]:checked');
+  const country = document.querySelector('input[name="COUNTRY"]:checked');
   const consent = document.querySelector('input[name="CONSENT"]:checked');
   const other   = document.getElementById('f-other').value.trim();
+  const countryOther = document.getElementById('f-country-other').value.trim();
 
   if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) return 'Please enter a valid email address.';
   if (!fname) return 'Please enter your first name.';
   if (!lname) return 'Please enter your last name.';
   if (!status) return 'Please select your current status.';
   if (status.value === '__other__' && !other) return 'Please describe your status in the "Other" field.';
+  if (!country) return 'Please select the country you are working/studying in.';
+  if (country.value === '__other__' && !countryOther) return 'Please enter your country in the "Other" field.';
   if (!consent) return 'Please select your email update preference.';
   return null;
 }
@@ -610,17 +636,23 @@ document.getElementById('malleus-form').addEventListener('submit', function(e) {
     return;
   }
 
-  const statusVal = document.querySelector('input[name="STATUS"]:checked').value;
-  const finalStatus = statusVal === '__other__'
-    ? document.getElementById('f-other').value.trim()
-    : statusVal;
-
   const params = new URLSearchParams();
   params.set(ENTRY.email,   document.getElementById('f-email').value.trim());
   params.set(ENTRY.fname,   document.getElementById('f-fname').value.trim());
   params.set(ENTRY.lname,   document.getElementById('f-lname').value.trim());
   params.set(ENTRY.ankihub, document.getElementById('f-ankihub').value.trim());
-  params.set(ENTRY.status,  finalStatus);
+  // Google Forms expects "Other" answers as __other_option__ plus a separate response field
+  const setChoice = (entry, name, otherInputId) => {
+    const val = document.querySelector(`input[name="${name}"]:checked`).value;
+    if (val === '__other__') {
+      params.set(entry, '__other_option__');
+      params.set(entry + '.other_option_response', document.getElementById(otherInputId).value.trim());
+    } else {
+      params.set(entry, val);
+    }
+  };
+  setChoice(ENTRY.status,  'STATUS',  'f-other');
+  setChoice(ENTRY.country, 'COUNTRY', 'f-country-other');
   params.set(ENTRY.consent, document.querySelector('input[name="CONSENT"]:checked').value);
 
   fetch(FORM_POST, { method: 'POST', mode: 'no-cors', body: params })
