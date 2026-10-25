@@ -5,8 +5,9 @@ Malleus Clinical Medicine — Static Site Builder
 Run:  python3 build.py
 Deps: pip install requests
 
-Outputs: index.html, getting-started.html, submission-guidelines.html,
-         checklist.html, register.html  (all in ./dist/)
+Outputs: index.html, register.html and the generated pages, all in ./dist/.
+The guides (getting started, submission guidelines, checklist) live on the
+docs site; their old URLs redirect there through dist/_redirects.
 
 Config
 ------
@@ -37,10 +38,17 @@ LOGO_PATH    = "logo.png"   # put your logo file here (same dir as build.py)
 DIST_DIR     = Path("dist")
 
 NOTION_PAGES = {
-    "getting-started":         "31d5964e68a4807ba315f7413b776b1a",
-    "submission-guidelines":   "31d5964e68a480fea3e3f9eed0c43486",
-    "checklist":               "31d5964e68a4804dbd60c509ddf513ac",
     "terms-of-use":            "3785964e68a480fca4dbcb245ecda795",
+}
+
+# The guides live on the docs site (Malleus-Docs repo, MkDocs)
+DOCS_URL = "https://docs.malleus.org.au/"
+
+# Old guide pages on this site → their docs pages (301s written to dist/_redirects)
+DOCS_REDIRECTS = {
+    "/getting-started.html":       DOCS_URL + "getting-started/",
+    "/submission-guidelines.html": DOCS_URL + "contributing/guidelines/",
+    "/checklist.html":             DOCS_URL + "contributing/checklist/",
 }
 
 # Databases queried at build time (must be shared with the Notion integration)
@@ -1126,9 +1134,7 @@ def nav_html(logo_name: str, active: str = "") -> str:
     # One nav for the whole site — index.html and register.html mirror this manually
     pages = [
         ("index.html",                 "Home",            "home"),
-        ("getting-started.html",       "Getting Started", "getting-started"),
-        ("submission-guidelines.html", "Submit Cards",    "submission-guidelines"),
-        ("checklist.html",             "Checklist",       "checklist"),
+        (DOCS_URL,                     "Docs",            "docs"),
         ("about.html",                 "About",           "about"),
         ("sponsors.html",              "Sponsors",        "sponsors"),
     ]
@@ -1163,12 +1169,11 @@ def footer_html(logo_name: str) -> str:
     <div class="footer-cols">
       <div class="footer-col">
         <span class="footer-col-title">Project</span>
-        <a href="getting-started.html">Getting Started</a>
-        <a href="submission-guidelines.html">Submit Cards</a>
-        <a href="checklist.html">Checklist</a>
+        <a href="{DOCS_URL}">Docs</a>
+        <a href="{DOCS_URL}getting-started/">Getting Started</a>
+        <a href="{DOCS_URL}contributing/">Submit Cards</a>
         <a href="about.html">About Us</a>
         <a href="sponsors.html">Sponsors</a>
-        <a href="https://malleuscm.notion.site/" target="_blank" rel="noopener">Notion Hub</a>
       </div>
       <div class="footer-col">
         <span class="footer-col-title">Community</span>
@@ -1429,7 +1434,7 @@ def build_jobs_page(logo_name: str) -> str:
     There are no open positions right now — but we're always happy to hear from keen
     contributors. Email <a href="mailto:secretary@malleus.org.au">secretary@malleus.org.au</a>
     to register your interest for the next round, or just start
-    <a href="submission-guidelines.html">suggesting cards</a> — most of our team started that way.
+    <a href="https://docs.malleus.org.au/contributing/">suggesting cards</a> — most of our team started that way.
   </div>"""
 
     body = f"""
@@ -1528,7 +1533,7 @@ def build_about_page(logo_name: str) -> str:
   </div>
 
   <div class="about-stats">
-    <div class="about-stat"><div class="about-stat-value">2,000+</div><div class="about-stat-label">Active subscribers on AnkiHub</div></div>
+    <div class="about-stat"><div class="about-stat-value">2,000+</div><div class="about-stat-label">Active subscribers</div></div>
     <div class="about-stat"><div class="about-stat-value">11</div><div class="about-stat-label">Volunteer maintainers</div></div>
     <div class="about-stat"><div class="about-stat-value">100%</div><div class="about-stat-label">Volunteer run &amp; not for profit</div></div>
   </div>
@@ -1637,7 +1642,7 @@ def build_404_page(logo_name: str) -> str:
 <div class="page-content">
   <div class="sponsor-actions" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
     <a class="btn-sponsor" href="index.html">Back to Home &rarr;</a>
-    <a class="btn-sponsor" style="background:var(--surface);color:var(--ink) !important;border:1px solid var(--border);" href="getting-started.html">Getting Started</a>
+    <a class="btn-sponsor" style="background:var(--surface);color:var(--ink) !important;border:1px solid var(--border);" href="https://docs.malleus.org.au/getting-started/">Getting Started</a>
   </div>
 </div>"""
     html = page_shell("Page Not Found", logo_name, "", body,
@@ -1652,8 +1657,7 @@ def write_seo_files():
     """Write sitemap.xml and robots.txt into dist/."""
     from datetime import date
     today = date.today().isoformat()
-    pages = ["", "getting-started.html", "submission-guidelines.html",
-             "checklist.html", "about.html", "events.html", "jobs-board.html",
+    pages = ["", "about.html", "events.html", "jobs-board.html",
              "sponsors.html", "register.html", "terms-of-use.html"]
     urls = "".join(
         f"<url><loc>{SITE_URL}{p}</loc><lastmod>{today}</lastmod></url>" for p in pages)
@@ -1666,6 +1670,10 @@ def write_seo_files():
     # dist/CNAME pins the custom domain on static hosts like GitHub Pages; the
     # live site is on Netlify (domain set in the dashboard), where the file is inert
     (DIST_DIR / "CNAME").write_text(SITE_DOMAIN + "\n", encoding="utf-8")
+    # Netlify reads dist/_redirects: old guide URLs go to the docs site
+    (DIST_DIR / "_redirects").write_text(
+        "".join(f"{old}  {new}  301\n" for old, new in DOCS_REDIRECTS.items()),
+        encoding="utf-8")
 
 
 def build_register_page(form_ids: dict, logo_name: str) -> str:
@@ -1813,30 +1821,6 @@ def main():
         print(f"  ✅  Found {len(form_ids)} fields: {list(form_ids.keys())}")
     else:
         print("  ⚠️  Using placeholder IDs — the form will need real IDs to submit.")
-
-    print("📄  Generating Getting Started page…")
-    html = build_notion_page(
-        "Getting Started", "How to use Malleus",
-        "Install the deck, set up AnkiHub, and start reviewing clinical medicine flashcards today.",
-        NOTION_PAGES["getting-started"], "getting-started", logo_name
-    )
-    (DIST_DIR / "getting-started.html").write_text(html, encoding="utf-8")
-
-    print("📄  Generating Submission Guidelines page…")
-    html = build_notion_page(
-        "Submission Guidelines", "Contributing to Malleus",
-        "Everything you need to know about formatting, tagging, and quality standards for new cards.",
-        NOTION_PAGES["submission-guidelines"], "submission-guidelines", logo_name
-    )
-    (DIST_DIR / "submission-guidelines.html").write_text(html, encoding="utf-8")
-
-    print("📄  Generating Card Submission Checklist page…")
-    html = build_notion_page(
-        "Card Submission Checklist", "Before you submit",
-        "Run through this checklist before submitting a card to make sure it meets Malleus standards.",
-        NOTION_PAGES["checklist"], "checklist", logo_name
-    )
-    (DIST_DIR / "checklist.html").write_text(html, encoding="utf-8")
 
     print("📄  Generating Terms of Use page…")
     html = build_notion_page(
