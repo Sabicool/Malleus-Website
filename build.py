@@ -1670,10 +1670,14 @@ def write_seo_files():
     # dist/CNAME pins the custom domain on static hosts like GitHub Pages; the
     # live site is on Netlify (domain set in the dashboard), where the file is inert
     (DIST_DIR / "CNAME").write_text(SITE_DOMAIN + "\n", encoding="utf-8")
-    # Netlify reads dist/_redirects: old guide URLs go to the docs site
-    (DIST_DIR / "_redirects").write_text(
-        "".join(f"{old}  {new}  301\n" for old, new in DOCS_REDIRECTS.items()),
-        encoding="utf-8")
+    # Netlify reads dist/_redirects: old guide URLs go to the docs site.
+    # Forced (301!) so they win even if a stale copy of the page is still
+    # served, and listed with and without .html (Netlify's pretty URLs).
+    rules = []
+    for old, new in DOCS_REDIRECTS.items():
+        rules.append(f"{old}  {new}  301!\n")
+        rules.append(f"{old[:-len('.html')]}  {new}  301!\n")
+    (DIST_DIR / "_redirects").write_text("".join(rules), encoding="utf-8")
 
 
 def build_register_page(form_ids: dict, logo_name: str) -> str:
@@ -1798,6 +1802,9 @@ def build_register_page(form_ids: dict, logo_name: str) -> str:
 
 def main():
     DIST_DIR.mkdir(exist_ok=True)
+    # The guide pages moved to the docs site; don't leave old copies behind
+    for old in DOCS_REDIRECTS:
+        (DIST_DIR / old.lstrip("/")).unlink(missing_ok=True)
 
     print("📖  Copying static assets…")
     logo_src = find_logo()
